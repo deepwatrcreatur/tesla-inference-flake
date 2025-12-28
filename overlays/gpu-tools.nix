@@ -5,35 +5,24 @@ final: prev:
   gpu-monitoring-tools = prev.buildEnv {
     name = "gpu-monitoring-tools";
     paths = with prev; [
-      nvtop          # GPU process monitor
-      nvidia-smi     # NVIDIA system management interface (included with driver)
       pciutils       # lspci for GPU detection
-      glxinfo        # OpenGL information (if X11 available)
-      vulkan-tools   # Vulkan GPU debugging
-    ];
+      # Note: nvidia-smi comes with nvidia drivers, not a separate package
+    ] ++ prev.lib.optionals (prev ? glxinfo) [ prev.glxinfo ]
+      ++ prev.lib.optionals (prev ? vulkan-tools) [ prev.vulkan-tools ];
     pathsToLink = [ "/bin" "/share" ];
   };
 
-  # Enhanced nvtop with Tesla GPU optimizations
-  nvtop-tesla = prev.nvtop.overrideAttrs (old: {
-    # Add Tesla-specific monitoring capabilities
-    postInstall = (old.postInstall or "") + ''
-      # Add Tesla GPU database for better device naming
-      mkdir -p $out/share/nvtop/
-      cat > $out/share/nvtop/tesla-devices.conf << 'EOF'
-      # Tesla GPU device mappings for better display names
-      # This helps nvtop show friendlier names for Tesla cards
-      0x1022 = "Tesla K20"
-      0x1028 = "Tesla K40"
-      0x102A = "Tesla K40"
-      0x1024 = "Tesla K80"
-      0x17F0 = "Tesla M40"
-      0x17F1 = "Tesla M40 24GB"
-      0x1B38 = "Tesla P40"
-      0x15F0 = "Tesla P100"
-      EOF
-    '';
-  });
+  # Basic GPU monitoring tool (simplified)
+  nvtop-tesla = prev.writeShellScriptBin "nvtop-tesla" ''
+    #!/bin/sh
+    # Tesla GPU monitoring wrapper
+    if command -v nvidia-smi >/dev/null 2>&1; then
+        watch -n 1 nvidia-smi
+    else
+        echo "nvidia-smi not found. Please ensure NVIDIA drivers are installed."
+        exit 1
+    fi
+  '';
 
   # Tesla GPU information script
   tesla-gpu-info = prev.writeShellScriptBin "tesla-gpu-info" ''

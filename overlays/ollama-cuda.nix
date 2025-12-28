@@ -1,8 +1,27 @@
 final: prev:
 
 let
-  # Import our Tesla architecture helpers
-  lib = import ../lib { inherit (prev) lib; };
+  # Tesla GPU CUDA architecture mappings
+  teslaArchitectures = {
+    "K20" = [ "35" ];
+    "K40" = [ "35" ];
+    "K80" = [ "37" ];
+    "M40" = [ "52" ];
+    "M60" = [ "52" ];
+    "P40" = [ "61" ];
+    "P100" = [ "60" ];
+  };
+
+  # Build CUDA architecture string for cmake
+  buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
+
+  # Predefined architecture sets
+  architectureSets = {
+    tesla-legacy = [ "35" "37" ];  # K-series
+    tesla-maxwell = [ "52" ];      # M-series
+    tesla-pascal = [ "60" "61" ];  # P-series
+    tesla-all = [ "35" "37" "52" "60" "61" ];
+  };
 
   # Common CUDA dependencies for Tesla GPUs
   teslaUdaDeps = with final.cudaPackages; [
@@ -18,7 +37,7 @@ let
   buildOllamaForArchitectures = architectures: prev.ollama.overrideAttrs (old: {
     # Set CUDA architectures
     cmakeFlags = (old.cmakeFlags or [ ]) ++ [
-      "-DGGML_CUDA_ARCHITECTURES=${lib.buildArchString architectures}"
+      "-DGGML_CUDA_ARCHITECTURES=${buildArchString architectures}"
       "-DGGML_CUDA=ON"
     ];
 
@@ -29,7 +48,7 @@ let
     preConfigure = (old.preConfigure or "") + ''
       export CUDA_PATH=${final.cudaPackages.cudatoolkit}
       export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
-      export CUDA_ARCHITECTURES="${lib.buildArchString architectures}"
+      export CUDA_ARCHITECTURES="${buildArchString architectures}"
     '';
 
     # Ensure CUDA is available during build
@@ -47,16 +66,16 @@ let
 
 in {
   # Ollama optimized for Tesla P40 (compute 6.1)
-  ollama-cuda-tesla-p40 = buildOllamaForArchitectures lib.teslaArchitectures.P40;
+  ollama-cuda-tesla-p40 = buildOllamaForArchitectures teslaArchitectures.P40;
 
   # Ollama optimized for all Tesla GPUs
-  ollama-cuda-tesla = buildOllamaForArchitectures lib.architectureSets.tesla-all;
+  ollama-cuda-tesla = buildOllamaForArchitectures architectureSets.tesla-all;
 
   # Ollama optimized for Pascal-generation Tesla GPUs (P40, P100)
-  ollama-cuda-tesla-pascal = buildOllamaForArchitectures lib.architectureSets.tesla-pascal;
+  ollama-cuda-tesla-pascal = buildOllamaForArchitectures architectureSets.tesla-pascal;
 
   # Ollama optimized for Maxwell-generation Tesla GPUs (M40, M60)
-  ollama-cuda-tesla-maxwell = buildOllamaForArchitectures lib.architectureSets.tesla-maxwell;
+  ollama-cuda-tesla-maxwell = buildOllamaForArchitectures architectureSets.tesla-maxwell;
 
   # Generic Tesla-optimized Ollama (alias for tesla-all)
   ollama-cuda-tesla-generic = final.ollama-cuda-tesla;

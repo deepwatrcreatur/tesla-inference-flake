@@ -20,10 +20,16 @@
           gpu-tools = import ./overlays/gpu-tools.nix;
         };
 
+        # Apply all overlays to pkgs
+        pkgsWithOverlays = pkgs.extend (final: prev:
+          (overlays.ollama-cuda final prev) //
+          (overlays.gpu-tools final prev)
+        );
+
         # Import packages with overlays applied
         teslaPackages = import ./packages {
-          inherit pkgs lib;
-          pkgs = pkgs.extend overlays.ollama-cuda;
+          inherit lib;
+          pkgs = pkgsWithOverlays;
         };
 
       in {
