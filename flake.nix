@@ -65,7 +65,6 @@
 
             # CUDA development tools
             cudaPackages.cuda_nvcc
-            cudaPackages.cuda_runtime
             cudaPackages.cuda_cudart
             cudaPackages.libcublas
 
