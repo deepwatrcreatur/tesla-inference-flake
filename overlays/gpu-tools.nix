@@ -7,7 +7,7 @@ final: prev:
     paths = with prev; [
       pciutils       # lspci for GPU detection
       # Note: nvidia-smi comes with nvidia drivers, not a separate package
-    ] ++ prev.lib.optionals (prev ? glxinfo) [ prev.glxinfo ]
+    ] ++ prev.lib.optionals (prev ? mesa-demos) [ prev.mesa-demos ]
       ++ prev.lib.optionals (prev ? vulkan-tools) [ prev.vulkan-tools ];
     pathsToLink = [ "/bin" "/share" ];
   };
