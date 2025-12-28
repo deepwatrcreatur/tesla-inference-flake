@@ -9,7 +9,12 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;  # Allow CUDA packages
+          };
+        };
 
         # Helper functions for CUDA architecture support
         lib = import ./lib { inherit (pkgs) lib; };
@@ -43,7 +48,7 @@
           default = overlays.ollama-cuda;
         };
 
-        # Development shell
+        # Development shell (without CUDA tools to avoid unfree license issues)
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Development tools
@@ -51,13 +56,11 @@
             nix
             nixpkgs-fmt
 
-            # CUDA development tools (for testing)
-            cudaPackages.cuda_nvcc
-            cudaPackages.cuda_runtime
-
-            # GPU monitoring
-            nvtop
+            # GPU monitoring (non-CUDA tools)
             pciutils
+
+            # Note: CUDA tools omitted from devShell to avoid unfree license issues
+            # Use: nix shell .#ollama-cuda-tesla-p40 --impure for CUDA development
           ];
 
           shellHook = ''

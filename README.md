@@ -42,12 +42,24 @@ Add to your `flake.nix`:
 
 ### Direct Package Installation
 
+**Note**: CUDA packages require unfree license acceptance. Use `--impure` flag and ensure unfree packages are allowed.
+
 ```bash
 # Install Tesla-optimized Ollama
-nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
+nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40 --impure
 
-# Install GPU monitoring tools
+# Or enter a shell with Tesla P40-optimized Ollama
+nix shell github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40 --impure
+
+# Install GPU monitoring tools (no unfree dependencies)
 nix profile install github:deepwatrcreatur/tesla-inference-flake#gpu-monitoring-tools
+```
+
+**Configure unfree packages**:
+```bash
+# Allow unfree packages in your nixpkgs config
+mkdir -p ~/.config/nixpkgs
+echo '{ allowUnfree = true; }' > ~/.config/nixpkgs/config.nix
 ```
 
 ### Using Templates
