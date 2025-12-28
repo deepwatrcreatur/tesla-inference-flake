@@ -3,10 +3,14 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-unfree = {
+      url = "github:numtide/nixpkgs-unfree";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, nixpkgs-unfree, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -15,6 +19,9 @@
             allowUnfree = true;  # Allow CUDA packages
           };
         };
+
+        # Use nixpkgs-unfree for CUDA packages
+        pkgs-unfree = import nixpkgs-unfree { inherit system; };
 
         # Helper functions for CUDA architecture support
         lib = import ./lib { inherit (pkgs) lib; };
