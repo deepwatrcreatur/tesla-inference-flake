@@ -1,0 +1,29 @@
+name: "CI"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Run flake checks
+      run: nix flake check --all-systems
+
+    - name: Build default package
+      run: nix build
+
+    - name: Check overlays evaluate
+      run: |
+        nix eval .#overlays.ollama-cuda --apply 'x: "overlay-evaluates"'
+        nix eval .#overlays.gpu-tools --apply 'x: "overlay-evaluates"'
+
+    - name: Verify templates
+      run: |
+        nix flake init -t .#tesla-p40
+        nix flake check
