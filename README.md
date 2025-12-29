@@ -48,8 +48,15 @@ Add to your `flake.nix`:
 # Install Tesla-optimized Ollama
 nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
 
-# Enter a shell with Tesla P40-optimized Ollama
-nix shell github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
+# Install Tesla-optimized llama.cpp
+nix profile install github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
+
+# Install llama-cpp-python for Tesla P40
+nix profile install github:deepwatrcreatur/tesla-inference-flake#llama-cpp-python-tesla-p40
+
+# Enter a shell with Tesla P40-optimized tools
+nix shell github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40 \
+         github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
 
 # Install GPU monitoring tools
 nix profile install github:deepwatrcreatur/tesla-inference-flake#gpu-monitoring-tools
@@ -78,16 +85,28 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 
 ## Available Packages
 
-### Ollama Variants
-- `ollama-cuda-tesla`: All Tesla GPUs support
-- `ollama-cuda-tesla-p40`: P40-optimized
-- `ollama-cuda-tesla-pascal`: P-series Tesla GPUs
-- `ollama-cuda-tesla-maxwell`: M-series Tesla GPUs
+### Tesla-Optimized Ollama
+- `ollama-cuda-tesla`: Ollama optimized for all Tesla GPUs
+- `ollama-cuda-tesla-p40`: Specifically optimized for Tesla P40
+- `ollama-cuda-tesla-pascal`: Optimized for Pascal-generation Tesla GPUs
+- `ollama-cuda-tesla-maxwell`: Optimized for Maxwell-generation Tesla GPUs
 
-### Monitoring Tools
-- `gpu-monitoring-tools`: Complete monitoring suite
-- `nvtop-tesla`: Enhanced nvtop with Tesla GPU recognition
-- `tesla-gpu-info`: Tesla GPU information script
+### Tesla-Optimized llama.cpp
+- `llama-cpp-tesla`: llama.cpp optimized for all Tesla GPUs
+- `llama-cpp-tesla-p40`: Specifically optimized for Tesla P40 (compute 6.1)
+- `llama-cpp-tesla-pascal`: Optimized for Pascal-generation Tesla GPUs
+- `llama-cpp-tesla-maxwell`: Optimized for Maxwell-generation Tesla GPUs
+
+### Tesla-Optimized llama-cpp-python
+- `llama-cpp-python-tesla`: Python bindings optimized for all Tesla GPUs
+- `llama-cpp-python-tesla-p40`: Python bindings for Tesla P40
+- `llama-cpp-python-tesla-pascal`: Python bindings for Pascal Tesla GPUs
+- `llama-cpp-python-tesla-maxwell`: Python bindings for Maxwell Tesla GPUs
+
+### GPU Monitoring Tools
+- `tesla-gpu-info`: Tesla GPU information and monitoring tool
+- `gpu-monitoring-tools`: Collection of GPU monitoring utilities
+- `nvtop-tesla`: Tesla-specific GPU monitoring dashboard
 
 ## Configuration Examples
 
