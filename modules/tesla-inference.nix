@@ -83,9 +83,9 @@ in
     # Configure Ollama service if enabled
     services.ollama = lib.mkIf cfg.ollama.enable {
       enable = true;
+      package = final.ollama;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
-      acceleration = "cuda";
       environmentVariables = cfg.ollama.environmentVariables // {
         OLLAMA_HOST = "${cfg.ollama.host}:${toString cfg.ollama.port}";
         OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
