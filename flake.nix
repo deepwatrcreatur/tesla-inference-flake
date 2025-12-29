@@ -55,21 +55,29 @@
             nix
             nixpkgs-fmt
 
-            # CUDA development tools
+            # GPU monitoring (cross-platform)
+            teslaPackages.tesla-gpu-info
+            teslaPackages.gpu-monitoring-tools
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+            # CUDA development tools (Linux only)
             cudaPackages.cuda_nvcc
             cudaPackages.cuda_cudart
             cudaPackages.libcublas
 
-            # GPU monitoring
+            # GPU monitoring (Linux-specific)
             pciutils
-            teslaPackages.tesla-gpu-info
-            teslaPackages.gpu-monitoring-tools
           ];
 
           shellHook = ''
             echo "Tesla Inference Flake Development Environment"
-            echo "CUDA Development Tools Available:"
-            echo "  - nvcc: $(nvcc --version 2>/dev/null | head -1 || echo 'CUDA Compiler')"
+            echo "Platform: ${pkgs.stdenv.hostPlatform.system}"
+            ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              echo "CUDA Development Tools Available:"
+              echo "  - nvcc: $(nvcc --version 2>/dev/null | head -1 || echo 'CUDA Compiler')"
+            ''}
+            ${pkgs.lib.optionalString (!pkgs.stdenv.isLinux) ''
+              echo "Note: CUDA tools not available on this platform"
+            ''}
             echo "  - tesla-gpu-info: Tesla GPU information tool"
             echo "Available packages: ollama-cuda-tesla, gpu-monitoring-tools"
             echo "Run 'nix flake show' to see all outputs"

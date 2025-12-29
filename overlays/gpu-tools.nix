@@ -5,10 +5,14 @@ final: prev:
   gpu-monitoring-tools = prev.buildEnv {
     name = "gpu-monitoring-tools";
     paths = with prev; [
-      pciutils       # lspci for GPU detection
       # Note: nvidia-smi comes with nvidia drivers, not a separate package
-    ] ++ prev.lib.optionals (prev ? mesa-demos) [ prev.mesa-demos ]
-      ++ prev.lib.optionals (prev ? vulkan-tools) [ prev.vulkan-tools ];
+    ] ++ prev.lib.optionals prev.stdenv.isLinux [
+      pciutils  # lspci for GPU detection (Linux only)
+    ] ++ prev.lib.optionals (prev.stdenv.isLinux && prev ? mesa-demos) [
+      prev.mesa-demos  # Mesa demos (Linux only)
+    ] ++ prev.lib.optionals (prev.stdenv.isLinux && prev ? vulkan-tools) [
+      prev.vulkan-tools  # Vulkan tools (Linux only)
+    ];
     pathsToLink = [ "/bin" "/share" ];
   };
 
