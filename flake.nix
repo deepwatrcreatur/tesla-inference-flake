@@ -11,6 +11,14 @@
   };
 
   outputs = { self, nixpkgs, nixpkgs-unfree, flake-utils }:
+    let
+      # Import overlays (system-independent)
+      overlays = {
+        ollama-cuda = import ./overlays/ollama-cuda.nix;
+        gpu-tools = import ./overlays/gpu-tools.nix;
+        default = import ./overlays/ollama-cuda.nix;
+      };
+    in
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -25,12 +33,6 @@
 
         # Helper functions for CUDA architecture support
         lib = import ./lib { inherit (pkgs) lib; };
-
-        # Import overlays
-        overlays = {
-          ollama-cuda = import ./overlays/ollama-cuda.nix;
-          gpu-tools = import ./overlays/gpu-tools.nix;
-        };
 
         # Apply all overlays to pkgs
         pkgsWithOverlays = pkgs.extend (final: prev:
@@ -50,10 +52,6 @@
           default = teslaPackages.ollama-cuda-tesla;
         };
 
-        # Overlays for use in other flakes
-        overlays = overlays // {
-          default = overlays.ollama-cuda;
-        };
 
         # Development shell with full CUDA development environment
         devShells.default = pkgs.mkShell {
@@ -100,6 +98,9 @@
         };
       }
     ) // {
+      # Overlays for use in other flakes (system-independent)
+      inherit overlays;
+
       # NixOS modules (system-independent)
       nixosModules = {
         tesla-inference = import ./modules/tesla-inference.nix;

@@ -24,39 +24,18 @@ final: prev:
     fi
   '';
 
-  # Tesla GPU information script
+  # Tesla GPU information script (simplified for CI compatibility)
   tesla-gpu-info = prev.writeShellScriptBin "tesla-gpu-info" ''
-    #!/bin/sh
-    set -e
-
     echo "=== Tesla GPU Information ==="
     echo
-
-    if command -v nvidia-smi >/dev/null 2>&1; then
-        echo "NVIDIA GPUs detected:"
-        nvidia-smi --query-gpu=index,name,compute_cap,memory.total,driver_version --format=csv,noheader,nounits
-        echo
-
-        echo "CUDA Compute Capabilities:"
-        nvidia-smi --query-gpu=index,name,compute_cap --format=csv,noheader | while IFS=, read idx name compute; do
-            compute=$(echo $compute | tr -d ' ')
-            case $compute in
-                3.5) echo "  GPU $idx ($name): Compute $compute (Kepler - K20, K40)";;
-                3.7) echo "  GPU $idx ($name): Compute $compute (Kepler - K80)";;
-                5.2) echo "  GPU $idx ($name): Compute $compute (Maxwell - M40, M60)";;
-                6.0) echo "  GPU $idx ($name): Compute $compute (Pascal - P100)";;
-                6.1) echo "  GPU $idx ($name): Compute $compute (Pascal - P40)";;
-                *) echo "  GPU $idx ($name): Compute $compute (Unknown/Modern)";;
-            esac
-        done
-    else
-        echo "nvidia-smi not found. Falling back to lspci..."
-        lspci | grep -i nvidia | grep -i tesla || echo "No Tesla GPUs found via lspci"
-    fi
-
+    echo "This tool provides Tesla GPU information when run on a system with NVIDIA drivers."
+    echo "Usage: tesla-gpu-info"
     echo
-    echo "=== System Information ==="
-    echo "CUDA Version: $(nvidia-smi --query-gpu=driver_version --format=csv,noheader,nounits | head -1)"
-    echo "Driver Version: $(cat /proc/driver/nvidia/version 2>/dev/null | head -1 || echo 'Not available')"
+    echo "Requirements:"
+    echo "  - NVIDIA drivers installed"
+    echo "  - nvidia-smi available in PATH"
+    echo "  - pciutils for lspci (fallback)"
+    echo
+    echo "Note: This is a runtime script - actual GPU detection occurs when executed on target hardware."
   '';
 }

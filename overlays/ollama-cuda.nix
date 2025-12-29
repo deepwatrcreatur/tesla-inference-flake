@@ -1,6 +1,8 @@
 final: prev:
 
 let
+  # Only enable CUDA overlays on Linux systems
+  isLinux = final.stdenv.isLinux;
   # Tesla GPU CUDA architecture mappings
   teslaArchitectures = {
     "K20" = [ "35" ];
@@ -23,46 +25,47 @@ let
     tesla-all = [ "35" "37" "52" "60" "61" ];
   };
 
-  # Common CUDA dependencies for Tesla GPUs
-  teslaUdaDeps = with final.cudaPackages; [
+  # Common CUDA dependencies for Tesla GPUs (Linux only)
+  teslaUdaDeps = if isLinux then with final.cudaPackages; [
     cuda_nvcc
     cuda_cudart
     libcublas
     libcusparse
     libcurand
     cudnn
-  ];
+  ] else [];
 
-  # Build Ollama with specific CUDA architectures
-  buildOllamaForArchitectures = architectures: prev.ollama.overrideAttrs (old: {
-    # Set CUDA architectures
-    cmakeFlags = (old.cmakeFlags or [ ]) ++ [
-      "-DGGML_CUDA_ARCHITECTURES=${buildArchString architectures}"
-      "-DGGML_CUDA=ON"
-    ];
+  # Build Ollama with specific CUDA architectures (Linux only)
+  buildOllamaForArchitectures = architectures:
+    if isLinux then prev.ollama.overrideAttrs (old: {
+      # Set CUDA architectures
+      cmakeFlags = (old.cmakeFlags or [ ]) ++ [
+        "-DGGML_CUDA_ARCHITECTURES=${buildArchString architectures}"
+        "-DGGML_CUDA=ON"
+      ];
 
-    # Add Tesla-optimized CUDA dependencies
-    buildInputs = (old.buildInputs or [ ]) ++ teslaUdaDeps;
+      # Add Tesla-optimized CUDA dependencies
+      buildInputs = (old.buildInputs or [ ]) ++ teslaUdaDeps;
 
-    # Set up CUDA compilation environment
-    preConfigure = (old.preConfigure or "") + ''
-      export CUDA_PATH=${final.cudaPackages.cudatoolkit}
-      export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
-      export CUDA_ARCHITECTURES="${buildArchString architectures}"
-    '';
+      # Set up CUDA compilation environment
+      preConfigure = (old.preConfigure or "") + ''
+        export CUDA_PATH=${final.cudaPackages.cudatoolkit}
+        export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
+        export CUDA_ARCHITECTURES="${buildArchString architectures}"
+      '';
 
-    # Ensure CUDA is available during build
-    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
-      final.cudaPackages.cuda_nvcc
-      final.pkg-config
-    ];
+      # Ensure CUDA is available during build
+      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+        final.cudaPackages.cuda_nvcc
+        final.pkg-config
+      ];
 
-    # Add metadata about supported architectures
-    passthru = (old.passthru or { }) // {
-      cudaArchitectures = architectures;
-      teslaOptimized = true;
-    };
-  });
+      # Add metadata about supported architectures
+      passthru = (old.passthru or { }) // {
+        cudaArchitectures = architectures;
+        teslaOptimized = true;
+      };
+    }) else prev.ollama; # Fall back to standard Ollama on non-Linux systems
 
 in {
   # Ollama optimized for Tesla P40 (compute 6.1)
