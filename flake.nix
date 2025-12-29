@@ -87,17 +87,13 @@
         # CI checks
         checks = {
           # Verify all packages build
-          packages-build = pkgs.runCommand "check-packages-build" {} ''
+          packages-build = pkgs.runCommand "check-packages-build" {
+            # Reference key packages to ensure they evaluate
+            inherit (teslaPackages) ollama-cuda-tesla tesla-gpu-info;
+          } ''
             echo "Checking that key packages are defined..."
-            # Just verify packages are defined without building them
-            ${pkgs.nix}/bin/nix eval --extra-experimental-features 'nix-command flakes' --json --expr '
-              builtins.attrNames (import ${./packages} {
-                inherit (import ${nixpkgs} { inherit system; config.allowUnfree = true; }) lib;
-                pkgs = import ${nixpkgs} { inherit system; config.allowUnfree = true; };
-              })
-            ' > packages.json
-            echo "Available packages:"
-            ${pkgs.jq}/bin/jq -r '.[]' packages.json
+            echo "✓ ollama-cuda-tesla: $ollama_cuda_tesla"
+            echo "✓ tesla-gpu-info: $tesla_gpu_info"
             echo "✓ Package definitions evaluate successfully"
             touch $out
           '';
