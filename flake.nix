@@ -88,12 +88,17 @@
         checks = {
           # Verify all packages build
           packages-build = pkgs.runCommand "check-packages-build" {} ''
-            echo "Checking that key packages evaluate..."
-            # Just check evaluation, not full build in CI
-            ${pkgs.nix}/bin/nix eval --extra-experimental-features 'nix-command flakes' --impure --expr '
-              let flake = builtins.getFlake "${self}";
-              in builtins.attrNames flake.packages.${system}
-            '
+            echo "Checking that key packages are defined..."
+            # Just verify packages are defined without building them
+            ${pkgs.nix}/bin/nix eval --extra-experimental-features 'nix-command flakes' --json --expr '
+              builtins.attrNames (import ${./packages} {
+                inherit (import ${nixpkgs} { inherit system; config.allowUnfree = true; }) lib;
+                pkgs = import ${nixpkgs} { inherit system; config.allowUnfree = true; };
+              })
+            ' > packages.json
+            echo "Available packages:"
+            ${pkgs.jq}/bin/jq -r '.[]' packages.json
+            echo "✓ Package definitions evaluate successfully"
             touch $out
           '';
         };
