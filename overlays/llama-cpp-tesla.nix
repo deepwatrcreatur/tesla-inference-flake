@@ -73,6 +73,8 @@ let
       ];
 
       # Add metadata about supported architectures
+      # Disable import check to avoid CUDA runtime dependency in build
+      pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
         cudaArchitectures = architectures;
         teslaOptimized = true;
@@ -99,6 +101,8 @@ let
       ];
 
       # Add metadata
+      # Disable import check to avoid CUDA runtime dependency in build
+      pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
         cudaArchitectures = architectures;
         teslaOptimized = true;
