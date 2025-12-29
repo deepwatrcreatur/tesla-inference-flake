@@ -90,7 +90,7 @@
           packages-build = pkgs.runCommand "check-packages-build" {} ''
             echo "Checking that key packages evaluate..."
             # Just check evaluation, not full build in CI
-            ${pkgs.nix}/bin/nix eval --impure --expr '
+            ${pkgs.nix}/bin/nix eval --extra-experimental-features 'nix-command flakes' --impure --expr '
               let flake = builtins.getFlake "${self}";
               in builtins.attrNames flake.packages.${system}
             '
