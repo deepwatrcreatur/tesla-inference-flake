@@ -27,5 +27,5 @@ jobs:
       run: |
         mkdir -p /tmp/template-test
         cd /tmp/template-test
-        nix flake init -t .#tesla-p40
+        nix flake init -t ${GITHUB_WORKSPACE}#tesla-p40
         nix flake check
