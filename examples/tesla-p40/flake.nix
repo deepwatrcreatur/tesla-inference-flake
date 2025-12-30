@@ -10,6 +10,7 @@
     nixosConfigurations.inference-host = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda tesla-inference.overlays.llama-cpp-tesla tesla-inference.overlays.gpu-tools ]; }
         tesla-inference.nixosModules.tesla-inference
         {
           # Tesla P40 specific configuration

@@ -10,6 +10,7 @@
     nixosConfigurations.modern-inference = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda tesla-inference.overlays.llama-cpp-tesla tesla-inference.overlays.gpu-tools ]; }
         tesla-inference.nixosModules.tesla-inference
         {
           # Modern GPU configuration (RTX 3000+, 4000+ series)
@@ -22,8 +23,6 @@
               modelsPath = "/models/ollama";
               port = 11434;
               host = "0.0.0.0";
-              # Modern GPUs use standard nixpkgs ollama
-              package = nixpkgs.ollama;
             };
 
             # GPU monitoring
