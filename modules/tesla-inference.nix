@@ -57,7 +57,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Determine CUDA architectures
+    # Determine CUDA architectures and set up overlays
     nixpkgs.overlays = [
       (final: prev: {
         # Use Tesla-optimized Ollama based on GPU type
@@ -83,7 +83,6 @@ in
     # Configure Ollama service if enabled
     services.ollama = lib.mkIf cfg.ollama.enable {
       enable = true;
-      package = pkgs.ollama;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
       environmentVariables = cfg.ollama.environmentVariables // {
