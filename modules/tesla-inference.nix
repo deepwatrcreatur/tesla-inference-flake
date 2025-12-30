@@ -57,17 +57,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Determine CUDA architectures and set up overlays
-    nixpkgs.overlays = [
-      (final: prev: {
-        # Use Tesla-optimized Ollama based on GPU type
-        ollama =
-          if cfg.gpu == "P40" then final.ollama-cuda-tesla-p40
-          else if lib.elem cfg.gpu [ "P40" "P100" ] then final.ollama-cuda-tesla-pascal
-          else if lib.elem cfg.gpu [ "M40" "M60" ] then final.ollama-cuda-tesla-maxwell
-          else final.ollama-cuda-tesla;
-      })
-    ];
+    # Note: nixpkgs overlays should be applied by the flake that uses this module.
+    # This module expects the tesla-inference overlays to already be available.
+    # See the example templates for how to properly apply overlays.
 
     # Enable hardware acceleration
     hardware.graphics.enable = true;
