@@ -12,7 +12,9 @@ jobs:
     - uses: DeterminateSystems/nix-installer-action@main
     - uses: DeterminateSystems/magic-nix-cache-action@main
       with:
-        flakehub-cache-token: ${{ secrets.FLAKEHUB_API_TOKEN }}
+        use-flakehub: true
+      env:
+        FLAKEHUB_API_TOKEN: ${{ secrets.FLAKEHUB_API_TOKEN }}
 
     - name: Run flake checks
       run: nix flake check --all-systems
