@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      FLAKEHUB_API_TOKEN: ${{ secrets.FLAKEHUB_API_TOKEN }}
     steps:
     - uses: actions/checkout@v4
     - uses: DeterminateSystems/nix-installer-action@main
     - uses: DeterminateSystems/magic-nix-cache-action@main
       with:
         use-flakehub: true
-      env:
-        FLAKEHUB_API_TOKEN: ${{ secrets.FLAKEHUB_API_TOKEN }}
 
     - name: Run flake checks
       run: nix flake check --all-systems
