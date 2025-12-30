@@ -83,7 +83,7 @@ in
     # Configure Ollama service if enabled
     services.ollama = lib.mkIf cfg.ollama.enable {
       enable = true;
-      package = final.ollama;
+      package = pkgs.ollama;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
       environmentVariables = cfg.ollama.environmentVariables // {
