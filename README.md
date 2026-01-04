@@ -48,6 +48,133 @@ Add to your `flake.nix`:
 # Install Tesla-optimized Ollama
 nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
 
+## Installation Options
+
+This flake provides **two approaches** for installing Ollama with Tesla GPU support:
+
+### Option 1: Source Builds (Default) - Tesla-Optimized
+
+Builds Ollama from source with specific CUDA architecture optimizations for your Tesla GPU.
+
+**When to use:**
+- Legacy Tesla cards (K20/K40 with compute 3.5, K80 with compute 3.7)
+- Maximum performance optimization (10-20% improvement on legacy cards)
+- Want to ensure CUDA compatibility with specific driver versions
+
+**Advantages:**
+- Tesla-specific CUDA architecture compilation
+- Optimized for your exact GPU model
+- Full control over build flags
+- Better support for older Tesla hardware
+
+**Disadvantages:**
+- Longer build time (30-60 minutes on P40)
+- Manual updates for new Ollama versions
+
+**Usage:**
+\`\`\`nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+  };
+
+  outputs = { nixpkgs, tesla-inference, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        # Source build (default)
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
+        tesla-inference.nixosModules.tesla-inference
+      ];
+    };
+  };
+}
+\`\`\`
+
+### Option 2: Official Binaries - Fast & Latest
+
+Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libraries.
+
+**When to use:**
+- Modern Tesla cards (P40/P100 with compute 6.0/6.1)
+- Want latest Ollama versions quickly
+- Proven working configuration
+- Minimal setup time
+
+**Advantages:**
+- Latest Ollama versions (no wait for rebuilds)
+- Fast installation (~2 minutes)
+- Official builds with bug fixes
+- Minimal maintenance
+
+**Disadvantages:**
+- Generic CUDA support (not Tesla-specific)
+- Slightly less optimized on legacy cards (~5-10% on K-series)
+- Dependent on Ollama maintaining binary releases
+
+**Usage:**
+\`\`\`nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+  };
+
+  outputs = { nixpkgs, tesla-inference, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        # Official binaries
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-official-binaries ]; }
+        tesla-inference.nixosModules.tesla-inference
+      ];
+    };
+  };
+}
+\`\`\`
+
+### Performance Comparison
+
+| GPU | Source Build | Official Binaries | Difference |
+|------|---------------|-------------------|------------|
+| P40 (6.1) | Baseline | ~5-10% slower | Minimal |
+| P100 (6.0) | Baseline | ~5-10% slower | Minimal |
+| M40/M60 (5.2) | Baseline | ~10-15% slower | Moderate |
+| K20/K40 (3.5) | Baseline | ~10-20% slower | Significant |
+| K80 (3.7) | Baseline | ~15-20% slower | Significant |
+
+*Note: These are estimated differences. Actual performance varies by workload and model.*
+
+### Which to Choose?
+
+**Choose Source Builds if:**
+- You have K20/K40/K80 cards
+- You want maximum performance
+- You can tolerate 30-60 minute builds
+- You want to customize CUDA flags
+
+**Choose Official Binaries if:**
+- You have P40/P100 or newer
+- You want latest Ollama quickly
+- You prefer proven configurations
+- You want minimal maintenance
+
+## Examples
+
+### Source Build Example (P40)
+
+See \`examples/tesla-p40/\` for complete NixOS configuration.
+
+\`\`\`bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
+\`\`\`
+
+### Official Binaries Example (P40)
+
+See \`examples/tesla-p40-binaries/\` for complete NixOS configuration.
+
+\`\`\`bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40-binaries
+\`\`\`
 # Install Tesla-optimized llama.cpp
 nix profile install github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
 
@@ -199,4 +326,130 @@ nix profile install "https://flakehub.com/f/deepwatrcreatur/tesla-inference-flak
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.## Installation Options
+
+This flake provides **two approaches** for installing Ollama with Tesla GPU support:
+
+### Option 1: Source Builds (Default) - Tesla-Optimized
+
+Builds Ollama from source with specific CUDA architecture optimizations for your Tesla GPU.
+
+**When to use:**
+- Legacy Tesla cards (K20/K40 with compute 3.5, K80 with compute 3.7)
+- Maximum performance optimization (10-20% improvement on legacy cards)
+- Want to ensure CUDA compatibility with specific driver versions
+
+**Advantages:**
+- Tesla-specific CUDA architecture compilation
+- Optimized for your exact GPU model
+- Full control over build flags
+- Better support for older Tesla hardware
+
+**Disadvantages:**
+- Longer build time (30-60 minutes on P40)
+- Manual updates for new Ollama versions
+
+**Usage:**
+\`\`\`nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+  };
+
+  outputs = { nixpkgs, tesla-inference, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        # Source build (default)
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
+        tesla-inference.nixosModules.tesla-inference
+      ];
+    };
+  };
+}
+\`\`\`
+
+### Option 2: Official Binaries - Fast & Latest
+
+Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libraries.
+
+**When to use:**
+- Modern Tesla cards (P40/P100 with compute 6.0/6.1)
+- Want latest Ollama versions quickly
+- Proven working configuration
+- Minimal setup time
+
+**Advantages:**
+- Latest Ollama versions (no wait for rebuilds)
+- Fast installation (~2 minutes)
+- Official builds with bug fixes
+- Minimal maintenance
+
+**Disadvantages:**
+- Generic CUDA support (not Tesla-specific)
+- Slightly less optimized on legacy cards (~5-10% on K-series)
+- Dependent on Ollama maintaining binary releases
+
+**Usage:**
+\`\`\`nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+  };
+
+  outputs = { nixpkgs, tesla-inference, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        # Official binaries
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-official-binaries ]; }
+        tesla-inference.nixosModules.tesla-inference
+      ];
+    };
+  };
+}
+\`\`\`
+
+### Performance Comparison
+
+| GPU | Source Build | Official Binaries | Difference |
+|------|---------------|-------------------|------------|
+| P40 (6.1) | Baseline | ~5-10% slower | Minimal |
+| P100 (6.0) | Baseline | ~5-10% slower | Minimal |
+| M40/M60 (5.2) | Baseline | ~10-15% slower | Moderate |
+| K20/K40 (3.5) | Baseline | ~10-20% slower | Significant |
+| K80 (3.7) | Baseline | ~15-20% slower | Significant |
+
+*Note: These are estimated differences. Actual performance varies by workload and model.*
+
+### Which to Choose?
+
+**Choose Source Builds if:**
+- You have K20/K40/K80 cards
+- You want maximum performance
+- You can tolerate 30-60 minute builds
+- You want to customize CUDA flags
+
+**Choose Official Binaries if:**
+- You have P40/P100 or newer
+- You want latest Ollama quickly
+- You prefer proven configurations
+- You want minimal maintenance
+
+## Examples
+
+### Source Build Example (P40)
+
+See \`examples/tesla-p40/\` for complete NixOS configuration.
+
+\`\`\`bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
+\`\`\`
+
+### Official Binaries Example (P40)
+
+See \`examples/tesla-p40-binaries/\` for complete NixOS configuration.
+
+\`\`\`bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40-binaries
+\`\`\`
