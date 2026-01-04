@@ -160,19 +160,17 @@ Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libra
 
 ## Examples
 
-### Source Build Example (P40)
-
-See \`examples/tesla-p40/\` for complete NixOS configuration.
-
-\`\`\`bash
+```
+See examples/tesla-p40/ for complete NixOS configuration.
+```bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 \`\`\`
 
 ### Official Binaries Example (P40)
-
-See \`examples/tesla-p40-binaries/\` for complete NixOS configuration.
-
-\`\`\`bash
+```
+See examples/tesla-p40-binaries/ for complete NixOS configuration.
+```bash
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40-binaries
 \`\`\`
 # Install Tesla-optimized llama.cpp
