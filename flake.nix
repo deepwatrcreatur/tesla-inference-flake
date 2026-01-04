@@ -9,12 +9,7 @@
   outputs = { self, nixpkgs, flake-utils }:
     let
       # Import overlays (system-independent)
-      overlays = {
-        ollama-cuda = import ./overlays/ollama-cuda.nix;
-        llama-cpp-tesla = import ./overlays/llama-cpp-tesla.nix;
-        gpu-tools = import ./overlays/gpu-tools.nix;
-        default = import ./overlays/ollama-cuda.nix;
-      };
+# Import overlays (system-independent)      overlays = {        ollama-cuda = import ./overlays/ollama-cuda.nix;        llama-cpp-tesla = import ./overlays/llama-cpp-tesla.nix;        gpu-tools = import ./overlays/gpu-tools.nix;        ollama-official-binaries = import ./overlays/ollama-official-binaries.nix;        default = import ./overlays/ollama-cuda.nix;      };
     in
     flake-utils.lib.eachDefaultSystem (system:
       let
