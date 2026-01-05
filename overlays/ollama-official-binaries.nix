@@ -25,10 +25,8 @@ in
     sourceRoot = ".";
 
     nativeBuildInputs = with final; [
-      autoPatchelfHook
-      patchelf
     ];
-    buildInputs = with final; [ final.stdenv.cc.cc ];
+    buildInputs = with final; [ final.stdenv.cc.cc patchelf ];
 
     autoPatchelfIgnoreMissingDeps = [
       "libgcc_s.so.1"
@@ -36,12 +34,12 @@ in
     ];
 
     installPhase = ''
-      mkdir -p \$out/bin \$out/lib
-      cp bin/ollama \$out/bin/ollama
-      cp -r lib/* \$out/lib/
+      mkdir -p $out/bin $out/lib
+      cp bin/ollama $out/bin/ollama
+      cp -r lib/* $out/lib/
 
-      # Set RPATH to include bundled CUDA libraries
-      patchelf --set-rpath "\$ORIGIN/../lib/ollama/cuda_v12:\$ORIGIN/../lib/ollama/cuda_v13:\$ORIGIN/..:\$ORIGIN" \$out/bin/ollama
+      # Set RPATH to include bundled CUDA libraries and the standard C++ library
+      patchelf --set-rpath "${final.stdenv.cc.cc.lib}/lib:$ORIGIN/../lib/ollama/cuda_v12:$ORIGIN/../lib/ollama/cuda_v13:$ORIGIN/..:$ORIGIN" $out/bin/ollama
     '';
 
     passthru = {
