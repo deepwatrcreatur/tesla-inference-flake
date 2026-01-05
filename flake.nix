@@ -92,10 +92,10 @@
           # Verify all packages build
           packages-build = pkgs.runCommand "check-packages-build" {
             # Reference key packages to ensure they evaluate
-            inherit (teslaPackages) ollama-cuda-tesla tesla-gpu-info llama-cpp-tesla;
+            inherit (teslaPackages) ollama-official-binaries tesla-gpu-info llama-cpp-tesla;
           } ''
             echo "Checking that key packages are defined..."
-            echo "✓ ollama-cuda-tesla: $ollama_cuda_tesla"
+            echo "✓ ollama-official-binaries: $ollama_official_binaries"
             echo "✓ tesla-gpu-info: $tesla_gpu_info"
             echo "✓ llama-cpp-tesla: $llama_cpp_tesla"
             echo "✓ Package definitions evaluate successfully"
