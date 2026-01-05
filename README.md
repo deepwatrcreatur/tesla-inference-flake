@@ -24,27 +24,14 @@ Add to your `flake.nix`:
   };
 
   outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      modules = [
-        tesla-inference.nixosModules.tesla-inference
-        {
-          tesla-inference = {
-            enable = true;
-            gpu = "P40";  # or K80, M40, etc.
-            ollama.enable = true;
-          };
-        }
-      ];
-    };
-  };
-}
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem { modules = [ tesla-inference.nixosModules.tesla-inference { tesla-inference = { enable = true; gpu = "P40"; # or K80, M40, etc. ollama.enable = true; }; } ]; }; }; } ```
 ``
 
 ### Direct Package Installation
 
-**Note**: This flake includes unfree CUDA packages by default.
+Note: This flake includes unfree CUDA packages by default.
 
-``bash
+```bash
 # Install Tesla-optimized Ollama
 nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
 
@@ -72,8 +59,6 @@ Builds Ollama from source with specific CUDA architecture optimizations for your
 - Manual updates for new Ollama versions
 
 **Usage:**
-```
-**Usage:**
 ```nix
 {
   inputs = {
@@ -89,23 +74,9 @@ Builds Ollama from source with specific CUDA architecture optimizations for your
         tesla-inference.nixosModules.tesla-inference
       ];
     };
-  }
-```
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
-  };
-
-  outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      modules = [
-        # Source build (default)
-        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
-        tesla-inference.nixosModules.tesla-inference
-      ];
-    };
   };
 }
-\`\`\`
+```
 
 ### Option 2: Official Binaries - Fast & Latest
 
