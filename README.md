@@ -72,9 +72,25 @@ Builds Ollama from source with specific CUDA architecture optimizations for your
 - Manual updates for new Ollama versions
 
 **Usage:**
-\`\`\`nix
+```
+**Usage:**
+```nix
 {
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+  };
+
+  outputs = { nixpkgs, tesla-inference, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        # Source build (default)
+        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
+        tesla-inference.nixosModules.tesla-inference
+      ];
+    };
+  }
+```
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
   };
@@ -162,9 +178,7 @@ Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libra
 
 ```
 See examples/tesla-p40/ for complete NixOS configuration.
-nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 \`\`\`
-
 ### Official Binaries Example (P40)
 See examples/tesla-p40-binaries/ for complete NixOS configuration.
 ```bash
