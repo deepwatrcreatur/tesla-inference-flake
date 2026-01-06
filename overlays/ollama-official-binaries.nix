@@ -4,7 +4,7 @@
 final: prev:
 
 let
-  inherit (final.stdenv.lib) lib;
+  inherit (final) lib;
 
   # Latest ollama version (can be overridden)
   version = "0.13.5";
