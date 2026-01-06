@@ -416,6 +416,55 @@ Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libra
 - You prefer proven configurations
 - You want minimal maintenance
 
+## Troubleshooting
+
+### Source Build: `cuda_compat` Error
+
+**Error:** `"variable $src or $srcs should point to the source" cuda_compat error`
+
+**Cause:** Explicitly overriding `cudaPackages` in the ollama package triggers a cuda_compat build that has derivation issues.
+
+**Bad (causes error):**
+```nix
+services.ollama = {
+  enable = true;
+  package = pkgs.ollama.override {
+    acceleration = "cuda";
+    cudaPackages = pkgs.cudaPackages_12_6;  # This triggers the error
+  };
+};
+```
+
+**Good (works):**
+```nix
+services.ollama = {
+  enable = true;
+  acceleration = "cuda";  # Simple, no package override
+};
+```
+
+**Or use official binaries:**
+```nix
+services.ollama = {
+  enable = true;
+  package = pkgs.ollama-official-binaries;  # Avoids source build entirely
+};
+```
+
+**Note:** Even with `nixpkgs.config.cudaForwardCompat = false`, the explicit cudaPackages override can trigger this error. The simple `acceleration = "cuda"` approach or official binaries avoids it.
+
+### Build Performance
+
+Source builds can take 30-60 minutes depending on your system. Use official binaries for faster deployment:
+
+```bash
+# Fast: Official binaries (2-5 minutes)
+nix build github:deepwatrcreatur/tesla-inference-flake#ollama-official-binaries
+
+# Slow: Source build (30-60 minutes)
+nix build github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
+```
+
 ## Examples
 
 ### Source Build Example (P40)
