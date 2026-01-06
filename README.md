@@ -222,7 +222,7 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 
 ### Tesla P40 Setup
 
-``nix
+```nix
 {
   tesla-inference = {
     enable = true;
@@ -237,11 +237,11 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
     monitoring.enable = true;
   };
 }
-``
+```
 
 ### Multi-GPU Configuration
 
-``nix
+```nix
 {
   tesla-inference = {
     enable = true;
@@ -257,7 +257,7 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
     };
   };
 }
-``
+```
 
 ## Development
 
