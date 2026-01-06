@@ -16,7 +16,7 @@ A Nix flake providing CUDA-optimized inference tools for Tesla GPUs (K-series, M
 
 Add to your `flake.nix`:
 
-``nix
+```nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -24,8 +24,8 @@ Add to your `flake.nix`:
   };
 
   outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem { modules = [ tesla-inference.nixosModules.tesla-inference { tesla-inference = { enable = true; gpu = "P40"; # or K80, M40, etc. ollama.enable = true; }; } ]; }; }; } ```
-``
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem { modules = [ tesla-inference.nixosModules.tesla-inference { tesla-inference = { enable = true; gpu = "P40"; # or K80, M40, etc. ollama.enable = true; }; } ]; }; }; }
+```
 
 ### Direct Package Installation
 
@@ -34,8 +34,7 @@ Note: This flake includes unfree CUDA packages by default.
 ```bash
 # Install Tesla-optimized Ollama
 nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
-
-## Installation Options
+```
 
 This flake provides **two approaches** for installing Ollama with Tesla GPU support:
 
@@ -147,14 +146,18 @@ Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libra
 
 ## Examples
 
-```
+### Source Build Example (P40)
 See examples/tesla-p40/ for complete NixOS configuration.
-\`\`\`
+```bash
+nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
+```
+
 ### Official Binaries Example (P40)
 See examples/tesla-p40-binaries/ for complete NixOS configuration.
 ```bash
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40-binaries
-\`\`\`
+```
+```bash
 # Install Tesla-optimized llama.cpp
 nix profile install github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
 
@@ -170,17 +173,17 @@ nix profile install github:deepwatrcreatur/tesla-inference-flake#gpu-monitoring-
 
 # Enter development environment with CUDA tools
 nix develop github:deepwatrcreatur/tesla-inference-flake
-``
+```
 
 ### Using Templates
 
-``bash
+```bash
 # Tesla P40 configuration template
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 
 # Modern GPU template
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
-``
+```
 
 ## Supported Tesla GPUs
 
@@ -258,7 +261,7 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 
 ## Development
 
-``bash
+```bash
 # Clone and enter development environment
 git clone https://github.com/deepwatrcreatur/tesla-inference-flake
 cd tesla-inference-flake
@@ -269,13 +272,13 @@ nix build .#ollama-cuda-tesla
 
 # Run checks
 nix flake check
-``
+```
 
 ## Integration with Other Flakes
 
 This flake is designed to integrate cleanly with existing NixOS configurations:
 
-``nix
+```nix
 # In your existing flake.nix
 {
   inputs.tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
@@ -286,16 +289,16 @@ This flake is designed to integrate cleanly with existing NixOS configurations:
   # Or use the NixOS module for complete setup
   imports = [ tesla-inference.nixosModules.tesla-inference ];
 }
-``
+```
 
 ## FlakeHub
 
 This flake is automatically published to [FlakeHub](https://flakehub.com) on tagged releases:
 
-``bash
+```bash
 # Use via FlakeHub
 nix profile install "https://flakehub.com/f/deepwatrcreatur/tesla-inference-flake/*.tar.gz"
-``
+```
 
 ## Contributing
 
