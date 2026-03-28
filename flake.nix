@@ -34,7 +34,8 @@
         pkgsWithOverlays = pkgs.extend (final: prev:
           (overlays.ollama-cuda final prev) //
           (overlays.llama-cpp-tesla final prev) //
-          (overlays.gpu-tools final prev)
+          (overlays.gpu-tools final prev) //
+          (overlays.ollama-official-binaries final prev)
         );
 
         # Import packages with overlays applied
@@ -124,6 +125,10 @@
         modern-gpu = {
           path = ./examples/modern-gpu;
           description = "Modern GPU inference configuration template";
+        };
+        tesla-p40-binaries = {
+          path = ./examples/tesla-p40-binaries;
+          description = "Tesla P40 inference configuration using official ollama binaries";
         };
       };
     };

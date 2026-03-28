@@ -2,6 +2,7 @@
 
 {
   # Tesla-optimized Ollama packages
+  ollama-official-binaries = pkgs.ollama-official-binaries;
   ollama-cuda-tesla = pkgs.ollama-cuda-tesla;
   ollama-cuda-tesla-p40 = pkgs.ollama-cuda-tesla-p40;
   ollama-cuda-tesla-pascal = pkgs.ollama-cuda-tesla-pascal;

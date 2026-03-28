@@ -22,10 +22,6 @@
           {
             # Tesla P40-specific configuration
             networking.hostName = "inference-host";
-            boot.kernelParams = [
-              # P40 requires these kernel params for proper GPU access
-              "nvidia.NVRM" = "0"
-            ];
 
             # Use official binaries ollama
             services.ollama = {
