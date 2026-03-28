@@ -15,7 +15,12 @@
 - **Reason**: The previous example suggested P40-specific kernel parameters that were not accurate and could cause confusion.
 - **Impact**: Safer, more portable template; host-specific kernel parameters can be added by operators as needed.
 
-## 4. Future candidates
+## 4. Fixed official binaries URL
+- **Change**: Corrected the `ollama-official-binaries` fetch URL to use `v${version}` instead of the literal `v\${version}`.
+- **Reason**: CI (Nix-CI) was failing to build `packages.x86_64-linux.ollama-official-binaries` with a 404 from GitHub because it requested `v${version}` verbatim.
+- **Impact**: Restores the ability for CI to fetch and build the official Ollama binaries; no functional change for consumers who already had the tarball cached.
+
+## 5. Future candidates
 - Add tests that exercise NixOS modules (`tesla-inference`, `ollama-cuda-service`, `gpu-monitoring`).
 - Extend CI to evaluate overlays on more systems and capture build-time metadata (e.g., supported architectures).
 - Document recommended NixOS options for multi-GPU Tesla setups in `docs/`.
