@@ -93,8 +93,9 @@ in
       };
     };
 
-    # Ensure models directory exists
+    # Ensure parent and models directory exist
     systemd.tmpfiles.rules = lib.mkIf cfg.ollama.enable [
+      "d ${builtins.dirOf cfg.ollama.modelsPath} 0755 root root -"
       "d ${cfg.ollama.modelsPath} 0755 ollama ollama -"
       "d ${cfg.ollama.modelsPath}/models 0755 ollama ollama -"
     ];
