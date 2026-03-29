@@ -6,8 +6,8 @@ final: prev:
 let
   inherit (final) lib;
 
-  # Latest ollama version (can be overridden)
-  version = "0.13.5";
+  # Pinned Ollama version with a known-good official binary asset
+  version = "0.18.2";
 
 in
 {
@@ -18,13 +18,14 @@ in
     inherit version;
 
     src = prev.fetchurl {
-      url = "https://github.com/ollama/ollama/releases/download/v\${version}/ollama-linux-amd64.tgz";
-      sha256 = "sha256-+xQOpCQ3BtAIewEIQY7lxvdO3Ov18U4vKJuONr0wPQ8=";
+      url = "https://github.com/ollama/ollama/releases/download/v\${version}/ollama-linux-amd64.tar.zst";
+      sha256 = "1h5zfbz4b6rrx7n7r7k3ga4v903xw0q4wanhfvn5hbxm2chsnwis";
     };
 
     sourceRoot = ".";
 
     nativeBuildInputs = with final; [
+      zstd
     ];
     buildInputs = with final; [ final.stdenv.cc.cc patchelf ];
 
