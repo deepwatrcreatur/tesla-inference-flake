@@ -141,7 +141,13 @@ in {
   # llama-cpp-python optimized for Tesla P40
   python3Packages = prev.python3Packages // {
     llama-cpp-python-tesla-p40 = buildLlamaCppPythonForArchitectures teslaArchitectures.P40;
+    # Full Tesla set (including Kepler); use this for real deployments that
+    # need K20/K40/K80 support.
     llama-cpp-python-tesla = buildLlamaCppPythonForArchitectures architectureSets.tesla-all;
+    # CI-only variant without Kepler for nvcc 12.8 on nix-ci.com / GitHub
+    # Actions. Use this in CI jobs when the CUDA toolchain cannot target
+    # compute_35/37, while keeping the full package set for production.
+    llama-cpp-python-tesla-ci = buildLlamaCppPythonForArchitectures architectureSets.tesla-ci;
     llama-cpp-python-tesla-pascal = buildLlamaCppPythonForArchitectures architectureSets.tesla-pascal;
     llama-cpp-python-tesla-maxwell = buildLlamaCppPythonForArchitectures architectureSets.tesla-maxwell;
   };
