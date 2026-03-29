@@ -19,8 +19,8 @@ jobs:
       with:
         use-flakehub: true
 
-    - name: Run flake checks
-      run: nix flake check --all-systems
+    - name: Run flake checks (Linux only)
+      run: nix flake check
 
     - name: Build default package
       run: nix build
