@@ -33,6 +33,17 @@ let
     tesla-ci = [ "5.2" "6.0" "6.1" ];
   };
 
+  # Filter architectures based on the CUDA toolkit we are building against.
+  # CUDA 12.8+ no longer supports Kepler (compute_35/37), so we drop those
+  # architectures from the *effective* build set when running on such
+  # toolchains while keeping them in the declarative sets above for users who
+  # pin an older CUDA.
+  cudaVersion = final.cudaPackages.cudatoolkit.version or "0";
+  supportsKepler = prev.lib.versionOlder cudaVersion "12.8";
+  effectiveArchitecturesForCuda = architectures:
+    if supportsKepler then architectures
+    else prev.lib.filter (arch: !(arch == "3.5" || arch == "3.7")) architectures;
+
   # Common CUDA dependencies for Tesla GPUs (Linux only)
   teslaCudaDeps = if isLinux then with final.cudaPackages; [
     cuda_nvcc
@@ -44,6 +55,9 @@ let
 
   # Build llama-cpp with specific CUDA architectures for Tesla GPUs
   buildLlamaCppForArchitectures = architectures:
+    let
+      effectiveArchitectures = effectiveArchitecturesForCuda architectures;
+    in
     if isLinux then prev.llama-cpp.overrideAttrs (old: {
       # Set CUDA architectures and enable CUDA support
       cmakeFlags = (old.cmakeFlags or [ ]) ++ [
@@ -53,12 +67,12 @@ let
         # CMAKE_CUDA_ARCHITECTURES to the Tesla-focused set here so default
         # flake checks stay green; advanced users targeting newer GPUs can
         # copy this overlay and adjust `architectureSets` or `teslaArchitectures`.
-        "-DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString architectures}"
-        "-DCUDA_ARCHITECTURES=${buildCmakeArchString architectures}"
+        "-DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures}"
+        "-DCUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures}"
         "-DGGML_CUDA_F16=ON"                    # Enable FP16 (where supported)
         "-DGGML_CUDA_FORCE_DMMV=ON"            # Force use of DMMV kernel for older GPUs
         "-DGGML_CUDA_FORCE_MMQ=OFF"            # Disable MMQ for compatibility
-      ] ++ prev.lib.optionals (prev.lib.any (arch: prev.lib.versionOlder arch "7.0") architectures) [
+      ] ++ prev.lib.optionals (prev.lib.any (arch: prev.lib.versionOlder arch "7.0") effectiveArchitectures) [
         # Additional optimizations for pre-Volta Tesla GPUs
         "-DGGML_CUDA_DMMV_X=32"               # Optimized DMMV tile size for Tesla
         "-DGGML_CUDA_MMV_Y=1"                 # Reduce MMV tile size for older GPUs
@@ -98,6 +112,9 @@ let
 
   # Build llama-cpp-python with Tesla optimizations
   buildLlamaCppPythonForArchitectures = architectures:
+    let
+      effectiveArchitectures = effectiveArchitecturesForCuda architectures;
+    in
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
