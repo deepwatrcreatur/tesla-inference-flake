@@ -15,8 +15,11 @@ let
     "P100" = [ "6.0" ];
   };
 
-  # Build CUDA architecture string for cmake
+  # Build CUDA architecture strings
   buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
+  # For CMake's CMAKE_CUDA_ARCHITECTURES, dots are not allowed; use integer codes like 35, 61.
+  buildCmakeArchString = architectures:
+    prev.lib.concatStringsSep ";" (map (arch: prev.lib.replaceStrings ["."] [""] arch) architectures);
 
   # Predefined architecture sets
   architectureSets = {
@@ -46,8 +49,8 @@ let
         # CMAKE_CUDA_ARCHITECTURES to the Tesla-focused set here so default
         # flake checks stay green; advanced users targeting newer GPUs can
         # copy this overlay and adjust `architectureSets` or `teslaArchitectures`.
-        "-DCMAKE_CUDA_ARCHITECTURES=${buildArchString architectures}"
-        "-DCUDA_ARCHITECTURES=${buildArchString architectures}"
+        "-DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString architectures}"
+        "-DCUDA_ARCHITECTURES=${buildCmakeArchString architectures}"
         "-DGGML_CUDA_F16=ON"                    # Enable FP16 (where supported)
         "-DGGML_CUDA_FORCE_DMMV=ON"            # Force use of DMMV kernel for older GPUs
         "-DGGML_CUDA_FORCE_MMQ=OFF"            # Disable MMQ for compatibility
@@ -64,8 +67,8 @@ let
       preConfigure = (old.preConfigure or "") + ''
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
-        export CMAKE_CUDA_ARCHITECTURES="${buildArchString architectures}"
-        export CUDA_ARCHITECTURES="${buildArchString architectures}"
+        export CMAKE_CUDA_ARCHITECTURES="${buildCmakeArchString architectures}"
+        export CUDA_ARCHITECTURES="${buildCmakeArchString architectures}"
 
         # Tesla-specific CUDA compiler flags
         export NVCCFLAGS="-gencode arch=compute_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)},code=sm_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)}"
@@ -94,7 +97,7 @@ let
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
-        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildArchString architectures} -DCUDA_ARCHITECTURES=${buildArchString architectures} -DGGML_CUDA_F16=ON"
+        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString architectures} -DCUDA_ARCHITECTURES=${buildCmakeArchString architectures} -DGGML_CUDA_F16=ON"
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
 
