@@ -85,13 +85,13 @@ let
       preConfigure = (old.preConfigure or "") + ''
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
-        export CMAKE_CUDA_ARCHITECTURES="${buildCmakeArchString architectures}"
-        export CUDA_ARCHITECTURES="${buildCmakeArchString architectures}"
+        export CMAKE_CUDA_ARCHITECTURES="${buildCmakeArchString effectiveArchitectures}"
+        export CUDA_ARCHITECTURES="${buildCmakeArchString effectiveArchitectures}"
 
         # Tesla-specific CUDA compiler flags
-        export NVCCFLAGS="-gencode arch=compute_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)},code=sm_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)}"
+        export NVCCFLAGS="-gencode arch=compute_${prev.lib.replaceStrings ["."] [""] (builtins.head effectiveArchitectures)},code=sm_${prev.lib.replaceStrings ["."] [""] (builtins.head effectiveArchitectures)}"
 
-        echo "Building llama-cpp for Tesla GPU architectures: ${buildArchString architectures}"
+        echo "Building llama-cpp for Tesla GPU architectures: ${buildArchString effectiveArchitectures}"
       '';
 
       # Ensure CUDA is available during build
@@ -118,11 +118,11 @@ let
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
-        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString architectures} -DCUDA_ARCHITECTURES=${buildCmakeArchString architectures} -DGGML_CUDA_F16=ON"
+        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DCUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DGGML_CUDA_F16=ON"
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
 
-        echo "Building llama-cpp-python for Tesla GPU architectures: ${buildArchString architectures}"
+        echo "Building llama-cpp-python for Tesla GPU architectures: ${buildArchString effectiveArchitectures}"
       '';
 
       # Add CUDA dependencies
