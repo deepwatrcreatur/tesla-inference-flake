@@ -41,6 +41,9 @@ in
           systemd.tmpfiles rules. On shared storage (virtiofs, NFS) you may need
           a more permissive mode like 0777.
         '';
+        apply = lib.strings.toUpper;
+        # Enforce simple octal mode like 0755, 0770, 0777; fail early on invalid values.
+        check = mode: builtins.match "^[0-7]{3,4}$" mode != null;
       };
 
       port = lib.mkOption {
