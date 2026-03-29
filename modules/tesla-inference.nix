@@ -32,6 +32,17 @@ in
         description = "Path where Ollama models are stored";
       };
 
+      modelsDirMode = lib.mkOption {
+        type = lib.types.str;
+        default = "0770";
+        example = "0777";
+        description = ''
+          File mode used for cfg.ollama.modelsPath and its models/ subdirectory in
+          systemd.tmpfiles rules. On shared storage (virtiofs, NFS) you may need
+          a more permissive mode like 0777.
+        '';
+      };
+
       port = lib.mkOption {
         type = lib.types.port;
         default = 11434;
@@ -93,11 +104,13 @@ in
       };
     };
 
-    # Ensure parent and models directory exist and have correct ownership
+    # Ensure parent and models directory exist and have correct ownership.
+    # The mode for the Ollama-owned directories is configurable via
+    # cfg.ollama.modelsDirMode to better support shared storage backends.
     systemd.tmpfiles.rules = lib.mkIf cfg.ollama.enable [
       "d ${builtins.dirOf cfg.ollama.modelsPath} 0755 root root -"
-      "Z ${cfg.ollama.modelsPath} 0755 ollama ollama -"
-      "Z ${cfg.ollama.modelsPath}/models 0755 ollama ollama -"
+      "Z ${cfg.ollama.modelsPath} ${cfg.ollama.modelsDirMode} ollama ollama -"
+      "Z ${cfg.ollama.modelsPath}/models ${cfg.ollama.modelsDirMode} ollama ollama -"
     ];
 
     # Add monitoring tools if enabled
