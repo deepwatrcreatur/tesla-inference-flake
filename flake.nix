@@ -47,7 +47,8 @@
       in {
         # Packages for direct installation
         packages = teslaPackages // {
-          default = teslaPackages.ollama-cuda-tesla;
+          # Default to official Ollama binaries (CUDA-bundled) for most users
+          default = teslaPackages.ollama-official-binaries;
         };
 
 

@@ -18,7 +18,7 @@ in
     inherit version;
 
     src = prev.fetchurl {
-      url = "https://github.com/ollama/ollama/releases/download/v\${version}/ollama-linux-amd64.tar.zst";
+      url = "https://github.com/ollama/ollama/releases/download/v${version}/ollama-linux-amd64.tar.zst";
       sha256 = "1h5zfbz4b6rrx7n7r7k3ga4v903xw0q4wanhfvn5hbxm2chsnwis";
     };
 
