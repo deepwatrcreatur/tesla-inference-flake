@@ -41,6 +41,12 @@ let
       # Set CUDA architectures and enable CUDA support
       cmakeFlags = (old.cmakeFlags or [ ]) ++ [
         "-DGGML_CUDA=ON"
+        # CI (nix-ci.com) runs with a CUDA toolchain that does not yet support
+        # the newest compute capabilities (e.g. compute_121a). We pin
+        # CMAKE_CUDA_ARCHITECTURES to the Tesla-focused set here so default
+        # flake checks stay green; advanced users targeting newer GPUs can
+        # copy this overlay and adjust `architectureSets` or `teslaArchitectures`.
+        "-DCMAKE_CUDA_ARCHITECTURES=${buildArchString architectures}"
         "-DCUDA_ARCHITECTURES=${buildArchString architectures}"
         "-DGGML_CUDA_F16=ON"                    # Enable FP16 (where supported)
         "-DGGML_CUDA_FORCE_DMMV=ON"            # Force use of DMMV kernel for older GPUs
@@ -58,6 +64,7 @@ let
       preConfigure = (old.preConfigure or "") + ''
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
+        export CMAKE_CUDA_ARCHITECTURES="${buildArchString architectures}"
         export CUDA_ARCHITECTURES="${buildArchString architectures}"
 
         # Tesla-specific CUDA compiler flags
@@ -87,7 +94,7 @@ let
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
-        export CMAKE_ARGS="-DGGML_CUDA=ON -DCUDA_ARCHITECTURES=${buildArchString architectures} -DGGML_CUDA_F16=ON"
+        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildArchString architectures} -DCUDA_ARCHITECTURES=${buildArchString architectures} -DGGML_CUDA_F16=ON"
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
 

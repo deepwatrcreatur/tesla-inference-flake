@@ -34,7 +34,8 @@
         pkgsWithOverlays = pkgs.extend (final: prev:
           (overlays.ollama-cuda final prev) //
           (overlays.llama-cpp-tesla final prev) //
-          (overlays.gpu-tools final prev)
+          (overlays.gpu-tools final prev) //
+          (overlays.ollama-official-binaries final prev)
         );
 
         # Import packages with overlays applied
