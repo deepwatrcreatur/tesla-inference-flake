@@ -23,10 +23,14 @@ let
 
   # Predefined architecture sets
   architectureSets = {
-    tesla-legacy = [ "3.5" "3.7" ];    # K-series
+    tesla-legacy = [ "3.5" "3.7" ];    # K-series (Kepler)
     tesla-maxwell = [ "5.2" ];         # M-series
     tesla-pascal = [ "6.0" "6.1" ];    # P-series
     tesla-all = [ "3.5" "3.7" "5.2" "6.0" "6.1" ];
+    # CI/build-safe set that avoids Kepler (nvcc 12.8+ on nix-ci.com rejects
+    # compute_35/37). Use this in CI jobs that must pass there, while keeping
+    # tesla-all for real deployments.
+    tesla-ci = [ "5.2" "6.0" "6.1" ];
   };
 
   # Common CUDA dependencies for Tesla GPUs (Linux only)
@@ -123,8 +127,10 @@ in {
   # llama-cpp optimized for Tesla P40 (compute 6.1)
   llama-cpp-tesla-p40 = buildLlamaCppForArchitectures teslaArchitectures.P40;
 
-  # llama-cpp optimized for all Tesla GPUs
+  # llama-cpp optimized for all Tesla GPUs (including Kepler)
   llama-cpp-tesla = buildLlamaCppForArchitectures architectureSets.tesla-all;
+  # CI-only variant that skips Kepler for nvcc 12.8 on nix-ci.com
+  llama-cpp-tesla-ci = buildLlamaCppForArchitectures architectureSets.tesla-ci;
 
   # llama-cpp optimized for Pascal-generation Tesla GPUs (P40, P100)
   llama-cpp-tesla-pascal = buildLlamaCppForArchitectures architectureSets.tesla-pascal;
