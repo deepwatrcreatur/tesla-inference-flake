@@ -104,9 +104,11 @@ let
       # Disable import check to avoid CUDA runtime dependency in build
       pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
-        cudaArchitectures = architectures;
+        # Report the *effective* architectures actually compiled for this
+        # CUDA toolkit, so metadata matches the binary.
+        cudaArchitectures = effectiveArchitectures;
         teslaOptimized = true;
-        supportedGpus = prev.lib.attrNames (prev.lib.filterAttrs (_: v: prev.lib.any (a: builtins.elem a architectures) v) teslaArchitectures);
+        supportedGpus = prev.lib.attrNames (prev.lib.filterAttrs (_: v: prev.lib.any (a: builtins.elem a effectiveArchitectures) v) teslaArchitectures);
       };
     }) else prev.llama-cpp; # Fall back to standard llama-cpp on non-Linux systems
 
@@ -135,7 +137,9 @@ let
       # Disable import check to avoid CUDA runtime dependency in build
       pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
-        cudaArchitectures = architectures;
+        # Match metadata to the CUDA architectures actually compiled for this
+        # toolkit version.
+        cudaArchitectures = effectiveArchitectures;
         teslaOptimized = true;
       };
     }) else prev.python3Packages.llama-cpp-python;
