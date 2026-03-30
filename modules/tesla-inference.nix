@@ -93,6 +93,12 @@ in
         description = "Enable systemd service for periodic GPU monitoring";
       };
 
+      monitoringCommand = lib.mkOption {
+        type = lib.types.str;
+        default = "${pkgs.tesla-gpu-info}/bin/tesla-gpu-info";
+        description = "Command to run for periodic GPU monitoring";
+      };
+
       monitoringInterval = lib.mkOption {
         type = lib.types.str;
         default = "30s";
@@ -127,6 +133,9 @@ in
         OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
       };
     };
+
+    # Open firewall port if needed
+    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1") [ cfg.ollama.port ];
 
     # Model storage configuration
     systemd.services.ollama = lib.mkIf cfg.ollama.enable {
@@ -176,7 +185,7 @@ in
       description = "GPU Monitoring Service";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${pkgs.tesla-gpu-info}/bin/tesla-gpu-info";
+        ExecStart = cfg.monitoring.monitoringCommand;
         User = "nobody";
         Group = "nogroup";
       };
@@ -186,8 +195,8 @@ in
       description = "GPU Monitoring Timer";
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnBootSec = cfg.monitoringInterval;
-        OnUnitActiveSec = cfg.monitoringInterval;
+        OnBootSec = cfg.monitoring.monitoringInterval;
+        OnUnitActiveSec = cfg.monitoring.monitoringInterval;
         Persistent = true;
       };
     };
