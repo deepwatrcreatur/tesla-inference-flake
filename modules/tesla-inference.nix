@@ -29,12 +29,23 @@ in
       package = lib.mkOption {
         type = lib.types.package;
         default =
-          if cfg.gpu == "P40" then pkgs.ollama-cuda-tesla-p40
-          else if cfg.gpu == "P100" then pkgs.ollama-cuda-tesla-pascal
-          else if cfg.gpu == "M40" || cfg.gpu == "M60" then pkgs.ollama-cuda-tesla-maxwell
-          else pkgs.ollama-cuda-tesla;
-        defaultText = lib.literalExpression "pkgs.ollama-cuda-tesla-<gpu>";
-        description = "Ollama package to use, defaults to the optimized version for the selected GPU.";
+          let
+            packageMap = {
+              "P40" = pkgs.ollama-cuda-tesla-p40;
+              "P100" = pkgs.ollama-cuda-tesla-pascal;
+              "M40" = pkgs.ollama-cuda-tesla-maxwell;
+              "M60" = pkgs.ollama-cuda-tesla-maxwell;
+            };
+          in
+          packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
+        defaultText = lib.literalExpression "pkgs.ollama-cuda-tesla-<suffix>";
+        description = ''
+          Ollama package to use. Defaults to a GPU-optimized variant based on the `gpu` setting:
+          - P40: `ollama-cuda-tesla-p40`
+          - P100: `ollama-cuda-tesla-pascal`
+          - M40/M60: `ollama-cuda-tesla-maxwell`
+          - K-series (default): `ollama-cuda-tesla`
+        '';
       };
 
       modelsPath = lib.mkOption {
