@@ -1,6 +1,6 @@
 { lib }:
 
-{
+rec {
   # Tesla GPU CUDA architecture mappings
   teslaArchitectures = {
     # Kepler generation
@@ -20,7 +20,7 @@
   # Get CUDA architectures for a specific Tesla GPU
   getArchitectures = gpu:
     lib.attrByPath [gpu] (throw "Unsupported Tesla GPU: ${gpu}")
-      lib.teslaArchitectures;
+      teslaArchitectures;
 
   # Build CUDA architecture string for cmake
   buildArchString = architectures:
@@ -28,11 +28,11 @@
 
   # Check if a GPU supports a specific compute capability
   supportsCompute = gpu: capability:
-    lib.elem capability (lib.getArchitectures gpu);
+    lib.elem capability (getArchitectures gpu);
 
   # Get all supported architectures (useful for multi-GPU setups)
   getAllArchitectures = gpus:
-    lib.unique (lib.flatten (map lib.getArchitectures gpus));
+    lib.unique (lib.flatten (map getArchitectures gpus));
 
   # Predefined architecture sets for common configurations
   architectureSets = {
@@ -40,5 +40,7 @@
     tesla-maxwell = [ "52" ];      # M-series
     tesla-pascal = [ "60" "61" ];  # P-series
     tesla-all = [ "35" "37" "52" "60" "61" ];
+    # CI/build-safe set that avoids Kepler (nvcc 12.8+ on nix-ci.com rejects compute_35/37).
+    tesla-ci = [ "52" "60" "61" ];
   };
 }
