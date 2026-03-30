@@ -33,20 +33,24 @@ if ! curl --output /dev/null --silent --head --fail "$URL"; then
 fi
 
 echo "Asset verified. Prefetching new hash..."
-NEW_HASH=$(nix-prefetch-url "$URL")
+PREFETCHED_HASH=$(nix-prefetch-url "$URL")
 
-if [ -z "$NEW_HASH" ]; then
+if [ -z "$PREFETCHED_HASH" ]; then
     echo "Error: Failed to prefetch hash for $URL"
     exit 1
 fi
 
+NEW_HASH=$(nix-hash --to-sri --type sha256 "$PREFETCHED_HASH")
+
 echo "Updating $OVERLAY_FILE..."
-OLD_HASH=$(grep 'sha256 =' "$OVERLAY_FILE" | head -n1 | cut -d'"' -f2)
+CURRENT_HASH_LINE=$(grep 'hash =' "$OVERLAY_FILE" || grep 'sha256 =' "$OVERLAY_FILE" | head -n1)
+OLD_HASH=$(echo "$CURRENT_HASH_LINE" | cut -d'"' -f2)
+ATTR_NAME=$(echo "$CURRENT_HASH_LINE" | cut -d' ' -f1 | xargs)
 
 # Atomic update using a temporary file and single sed command
 TEMP_FILE=$(mktemp)
 sed -e "s/version = \"$CURRENT_VERSION\";/version = \"$VERSION\";/" \
-    -e "s/sha256 = \"$OLD_HASH\";/sha256 = \"$NEW_HASH\";/" \
+    -e "s/$ATTR_NAME = \"$OLD_HASH\";/hash = \"$NEW_HASH\";/" \
     "$OVERLAY_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$OVERLAY_FILE"
 
