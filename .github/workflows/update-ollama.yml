@@ -1,0 +1,39 @@
+name: "Ollama Binary Update Check"
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Every Monday at 00:00 UTC
+  workflow_dispatch: # Allow manual run
+
+jobs:
+  update-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Check and update Ollama
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          nix run .#update-ollama
+
+          # Check if changes were made
+          if [[ -n "$(git status --porcelain)" ]]; then
+            NEW_VERSION=$(grep 'version =' overlays/ollama-official-binaries.nix | head -n1 | cut -d'"' -f2)
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b chore/update-ollama-v$NEW_VERSION
+            git add .
+            git commit -m "chore(deps): update official ollama binaries to v$NEW_VERSION"
+            git push origin chore/update-update-ollama-v$NEW_VERSION
+
+            gh pr create \
+              --title "chore(deps): update official ollama binaries to v$NEW_VERSION" \
+              --body "Automated update of official Ollama pre-built binaries to version v$NEW_VERSION. This update was triggered by the weekly automation workflow." \
+              --base main \
+              --head chore/update-ollama-v$NEW_VERSION
+          else
+            echo "No updates found."
+          fi

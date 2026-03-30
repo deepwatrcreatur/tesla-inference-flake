@@ -51,6 +51,18 @@
           default = teslaPackages.ollama-official-binaries;
         };
 
+        # Flake apps for automation
+        apps = {
+          update-ollama = {
+            type = "app";
+            program = "${pkgs.writeShellScript "update-ollama" ''
+              export PATH=${pkgs.lib.makeBinPath (with pkgs; [ gh curl nix-prefetch coreutils gnused ])}:$PATH
+              ./scripts/update-ollama.sh
+            ''}";
+          };
+          default = self.apps.${system}.update-ollama;
+        };
+
 
         # Development shell with full CUDA development environment
         devShells.default = pkgs.mkShell {
