@@ -155,10 +155,10 @@ in
         SupplementaryGroups = [ "video" ];
         DevicePolicy = "closed";
         DeviceAllow = [
-          "/dev/nvidia0 rw"
+          "/dev/nvidia* rw"
+          "/dev/nvidiactl rw"
           "/dev/nvidia-uvm rw"
           "/dev/nvidia-modeset rw"
-          "/dev/nvidiactl rw"
         ];
       };
     };
