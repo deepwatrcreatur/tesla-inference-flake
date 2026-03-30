@@ -111,9 +111,17 @@
       # NixOS modules (system-independent)
       nixosModules = {
         tesla-inference = import ./modules/tesla-inference.nix;
-        ollama-cuda-service = import ./modules/ollama-cuda-service.nix;
-        gpu-monitoring = import ./modules/gpu-monitoring.nix;
         default = self.nixosModules.tesla-inference;
+
+        # Deprecated: redirect to tesla-inference with warning
+        gpu-monitoring = { lib, ... }: {
+          imports = [ self.nixosModules.tesla-inference ];
+          warnings = [ "nixosModules.gpu-monitoring is deprecated. Use nixosModules.tesla-inference with monitoring.enable = true instead." ];
+        };
+        ollama-cuda-service = { lib, ... }: {
+          imports = [ self.nixosModules.tesla-inference ];
+          warnings = [ "nixosModules.ollama-cuda-service is deprecated. Use nixosModules.tesla-inference with ollama.enable = true instead." ];
+        };
       };
 
       # Templates for easy setup
