@@ -19,7 +19,7 @@ in
 
     src = prev.fetchurl {
       url = "https://github.com/ollama/ollama/releases/download/v${version}/ollama-linux-amd64.tgz";
-      sha256 = "sha256-+xQOpCQ3BtAIewEIQY7lxvdO3Ov18U4vKJuONr0wPQ8=";
+      sha256 = "sha256-QfuT/4vjXk0tIrr9HEK0h++xW3Zgdtl2dmvR7k2z+OI=";
     };
 
     sourceRoot = ".";
