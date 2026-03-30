@@ -65,4 +65,7 @@ in {
 
   # Generic Tesla-optimized Ollama (alias for tesla-all)
   ollama-cuda-tesla-generic = final.ollama-cuda-tesla;
+
+  # Override standard Ollama for drop-in compatibility
+  ollama = final.ollama-cuda-tesla;
 }

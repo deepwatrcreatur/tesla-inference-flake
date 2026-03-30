@@ -56,4 +56,7 @@ in
   ollama-cuda-tesla-p40-binaries = final.ollama-official-binaries;
   ollama-cuda-tesla-pascal-binaries = final.ollama-official-binaries;
   ollama-cuda-tesla-maxwell-binaries = final.ollama-official-binaries;
+
+  # Override standard Ollama for drop-in compatibility
+  ollama = final.ollama-official-binaries;
 }

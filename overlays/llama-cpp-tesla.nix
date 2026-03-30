@@ -156,8 +156,14 @@ in {
     llama-cpp-python-tesla-ci = buildLlamaCppPythonForArchitectures architectureSets.tesla-ci;
     llama-cpp-python-tesla-pascal = buildLlamaCppPythonForArchitectures architectureSets.tesla-pascal;
     llama-cpp-python-tesla-maxwell = buildLlamaCppPythonForArchitectures architectureSets.tesla-maxwell;
+
+    # Override standard llama-cpp-python for drop-in compatibility
+    llama-cpp-python = final.python3Packages.llama-cpp-python-tesla;
   };
 
   # Convenience alias for most common Tesla use case
   llama-cpp-tesla-generic = final.llama-cpp-tesla-pascal;
+
+  # Override standard llama-cpp for drop-in compatibility
+  llama-cpp = final.llama-cpp-tesla;
 }
