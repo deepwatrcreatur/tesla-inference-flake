@@ -7,7 +7,7 @@ let
   inherit (final) lib;
 
   # Pinned Ollama version with a known-good official binary asset
-  version = "0.18.2";
+  version = "0.18.3";
 
 in
 {
@@ -19,7 +19,7 @@ in
 
     src = prev.fetchurl {
       url = "https://github.com/ollama/ollama/releases/download/v${version}/ollama-linux-amd64.tar.zst";
-      sha256 = "1h5zfbz4b6rrx7n7r7k3ga4v903xw0q4wanhfvn5hbxm2chsnwis";
+      hash = "sha256-ez+yLy4BoX8D7ArIigsHDuLXSBAw5zUzesjAK4S15m4=";
     };
 
     sourceRoot = ".";
