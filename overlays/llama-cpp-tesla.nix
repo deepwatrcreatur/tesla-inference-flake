@@ -15,16 +15,34 @@ let
     "P100" = [ "6.0" ];
   };
 
-  # Build CUDA architecture string for cmake
+  # Build CUDA architecture strings
   buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
+  # For CMake's CMAKE_CUDA_ARCHITECTURES, dots are not allowed; use integer codes like 35, 61.
+  buildCmakeArchString = architectures:
+    prev.lib.concatStringsSep ";" (map (arch: prev.lib.replaceStrings ["."] [""] arch) architectures);
 
   # Predefined architecture sets
   architectureSets = {
-    tesla-legacy = [ "3.5" "3.7" ];    # K-series
+    tesla-legacy = [ "3.5" "3.7" ];    # K-series (Kepler)
     tesla-maxwell = [ "5.2" ];         # M-series
     tesla-pascal = [ "6.0" "6.1" ];    # P-series
     tesla-all = [ "3.5" "3.7" "5.2" "6.0" "6.1" ];
+    # CI/build-safe set that avoids Kepler (nvcc 12.8+ on nix-ci.com rejects
+    # compute_35/37). Use this in CI jobs that must pass there, while keeping
+    # tesla-all for real deployments.
+    tesla-ci = [ "5.2" "6.0" "6.1" ];
   };
+
+  # Filter architectures based on the CUDA toolkit we are building against.
+  # CUDA 12.8+ no longer supports Kepler (compute_35/37), so we drop those
+  # architectures from the *effective* build set when running on such
+  # toolchains while keeping them in the declarative sets above for users who
+  # pin an older CUDA.
+  cudaVersion = final.cudaPackages.cudatoolkit.version or "0";
+  supportsKepler = prev.lib.versionOlder cudaVersion "12.8";
+  effectiveArchitecturesForCuda = architectures:
+    if supportsKepler then architectures
+    else prev.lib.filter (arch: !(arch == "3.5" || arch == "3.7")) architectures;
 
   # Common CUDA dependencies for Tesla GPUs (Linux only)
   teslaCudaDeps = if isLinux then with final.cudaPackages; [
@@ -37,15 +55,22 @@ let
 
   # Build llama-cpp with specific CUDA architectures for Tesla GPUs
   buildLlamaCppForArchitectures = architectures:
+    let
+      effectiveArchitectures = effectiveArchitecturesForCuda architectures;
+    in
     if isLinux then prev.llama-cpp.overrideAttrs (old: {
       # Set CUDA architectures and enable CUDA support
       cmakeFlags = (old.cmakeFlags or [ ]) ++ [
         "-DGGML_CUDA=ON"
-        "-DCUDA_ARCHITECTURES=${buildArchString architectures}"
+        # CMAKE_CUDA_ARCHITECTURES must be set so the early cmake CUDA compiler
+        # test uses our restricted Tesla set rather than nixpkgs' default list
+        # (which includes compute_121a that nvcc 12.8 cannot target).
+        "-DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures}"
+        "-DCUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures}"
         "-DGGML_CUDA_F16=ON"                    # Enable FP16 (where supported)
         "-DGGML_CUDA_FORCE_DMMV=ON"            # Force use of DMMV kernel for older GPUs
         "-DGGML_CUDA_FORCE_MMQ=OFF"            # Disable MMQ for compatibility
-      ] ++ prev.lib.optionals (prev.lib.any (arch: prev.lib.versionOlder arch "7.0") architectures) [
+      ] ++ prev.lib.optionals (prev.lib.any (arch: prev.lib.versionOlder arch "7.0") effectiveArchitectures) [
         # Additional optimizations for pre-Volta Tesla GPUs
         "-DGGML_CUDA_DMMV_X=32"               # Optimized DMMV tile size for Tesla
         "-DGGML_CUDA_MMV_Y=1"                 # Reduce MMV tile size for older GPUs
@@ -58,12 +83,13 @@ let
       preConfigure = (old.preConfigure or "") + ''
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
-        export CUDA_ARCHITECTURES="${buildArchString architectures}"
+        export CMAKE_CUDA_ARCHITECTURES="${buildCmakeArchString effectiveArchitectures}"
+        export CUDA_ARCHITECTURES="${buildCmakeArchString effectiveArchitectures}"
 
         # Tesla-specific CUDA compiler flags
-        export NVCCFLAGS="-gencode arch=compute_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)},code=sm_${prev.lib.replaceStrings ["."] [""] (builtins.head architectures)}"
+        export NVCCFLAGS="-gencode arch=compute_${prev.lib.replaceStrings ["."] [""] (builtins.head effectiveArchitectures)},code=sm_${prev.lib.replaceStrings ["."] [""] (builtins.head effectiveArchitectures)}"
 
-        echo "Building llama-cpp for Tesla GPU architectures: ${buildArchString architectures}"
+        echo "Building llama-cpp for Tesla GPU architectures: ${buildArchString effectiveArchitectures}"
       '';
 
       # Ensure CUDA is available during build
@@ -76,22 +102,27 @@ let
       # Disable import check to avoid CUDA runtime dependency in build
       pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
-        cudaArchitectures = architectures;
+        # Report the *effective* architectures actually compiled for this
+        # CUDA toolkit, so metadata matches the binary.
+        cudaArchitectures = effectiveArchitectures;
         teslaOptimized = true;
-        supportedGpus = prev.lib.attrNames (prev.lib.filterAttrs (_: v: prev.lib.any (a: builtins.elem a architectures) v) teslaArchitectures);
+        supportedGpus = prev.lib.attrNames (prev.lib.filterAttrs (_: v: prev.lib.any (a: builtins.elem a effectiveArchitectures) v) teslaArchitectures);
       };
     }) else prev.llama-cpp; # Fall back to standard llama-cpp on non-Linux systems
 
   # Build llama-cpp-python with Tesla optimizations
   buildLlamaCppPythonForArchitectures = architectures:
+    let
+      effectiveArchitectures = effectiveArchitecturesForCuda architectures;
+    in
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
-        export CMAKE_ARGS="-DGGML_CUDA=ON -DCUDA_ARCHITECTURES=${buildArchString architectures} -DGGML_CUDA_F16=ON"
+        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DCUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DGGML_CUDA_F16=ON"
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
 
-        echo "Building llama-cpp-python for Tesla GPU architectures: ${buildArchString architectures}"
+        echo "Building llama-cpp-python for Tesla GPU architectures: ${buildArchString effectiveArchitectures}"
       '';
 
       # Add CUDA dependencies
@@ -104,7 +135,9 @@ let
       # Disable import check to avoid CUDA runtime dependency in build
       pythonImportsCheck = [ ];
       passthru = (old.passthru or { }) // {
-        cudaArchitectures = architectures;
+        # Match metadata to the CUDA architectures actually compiled for this
+        # toolkit version.
+        cudaArchitectures = effectiveArchitectures;
         teslaOptimized = true;
       };
     }) else prev.python3Packages.llama-cpp-python;
@@ -113,8 +146,10 @@ in {
   # llama-cpp optimized for Tesla P40 (compute 6.1)
   llama-cpp-tesla-p40 = buildLlamaCppForArchitectures teslaArchitectures.P40;
 
-  # llama-cpp optimized for all Tesla GPUs
+  # llama-cpp optimized for all Tesla GPUs (including Kepler)
   llama-cpp-tesla = buildLlamaCppForArchitectures architectureSets.tesla-all;
+  # CI-only variant that skips Kepler for nvcc 12.8 on nix-ci.com
+  llama-cpp-tesla-ci = buildLlamaCppForArchitectures architectureSets.tesla-ci;
 
   # llama-cpp optimized for Pascal-generation Tesla GPUs (P40, P100)
   llama-cpp-tesla-pascal = buildLlamaCppForArchitectures architectureSets.tesla-pascal;
@@ -125,7 +160,13 @@ in {
   # llama-cpp-python optimized for Tesla P40
   python3Packages = prev.python3Packages // {
     llama-cpp-python-tesla-p40 = buildLlamaCppPythonForArchitectures teslaArchitectures.P40;
+    # Full Tesla set (including Kepler); use this for real deployments that
+    # need K20/K40/K80 support.
     llama-cpp-python-tesla = buildLlamaCppPythonForArchitectures architectureSets.tesla-all;
+    # CI-only variant without Kepler for nvcc 12.8 on nix-ci.com / GitHub
+    # Actions. Use this in CI jobs when the CUDA toolchain cannot target
+    # compute_35/37, while keeping the full package set for production.
+    llama-cpp-python-tesla-ci = buildLlamaCppPythonForArchitectures architectureSets.tesla-ci;
     llama-cpp-python-tesla-pascal = buildLlamaCppPythonForArchitectures architectureSets.tesla-pascal;
     llama-cpp-python-tesla-maxwell = buildLlamaCppPythonForArchitectures architectureSets.tesla-maxwell;
   };
