@@ -26,6 +26,17 @@ in
     ollama = {
       enable = lib.mkEnableOption "Ollama inference service";
 
+      package = lib.mkOption {
+        type = lib.types.package;
+        default =
+          if cfg.gpu == "P40" then pkgs.ollama-cuda-tesla-p40
+          else if cfg.gpu == "P100" then pkgs.ollama-cuda-tesla-pascal
+          else if cfg.gpu == "M40" || cfg.gpu == "M60" then pkgs.ollama-cuda-tesla-maxwell
+          else pkgs.ollama-cuda-tesla;
+        defaultText = lib.literalExpression "pkgs.ollama-cuda-tesla-<gpu>";
+        description = "Ollama package to use, defaults to the optimized version for the selected GPU.";
+      };
+
       modelsPath = lib.mkOption {
         type = lib.types.str;
         default = "/models/ollama";
@@ -143,6 +154,7 @@ in
     # Configure Ollama service if enabled
     services.ollama = lib.mkIf cfg.ollama.enable {
       enable = true;
+      package = cfg.ollama.package;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
       environmentVariables = cfg.ollama.environmentVariables // {
