@@ -72,7 +72,8 @@ in
           nvtop-tesla
           tesla-gpu-info
         ];
-        description = "GPU monitoring packages to install";
+        defaultText = lib.literalExpression "with pkgs; [ gpu-monitoring-tools nvtop-tesla tesla-gpu-info ]";
+        description = "GPU monitoring packages to install. Note: the default packages require the flake's overlays to be applied.";
       };
 
       aliases = lib.mkOption {
@@ -134,8 +135,8 @@ in
       };
     };
 
-    # Open firewall port if needed
-    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1") [ cfg.ollama.port ];
+    # Open firewall port if needed (check both IPv4 and IPv6 loopback)
+    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1" && cfg.ollama.host != "::1") [ cfg.ollama.port ];
 
     # Model storage configuration
     systemd.services.ollama = lib.mkIf cfg.ollama.enable {
@@ -186,8 +187,15 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = cfg.monitoring.monitoringCommand;
+        # Use nobody for unprivileged run, but grant video group access for GPU metrics
         User = "nobody";
-        Group = "nogroup";
+        Group = "video";
+        # Grant GPU device access
+        DeviceAllow = [
+          "/dev/nvidia* r"
+          "/dev/nvidiactl r"
+          "/dev/nvidia-uvm r"
+        ];
       };
     };
 
