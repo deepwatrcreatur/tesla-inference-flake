@@ -65,6 +65,14 @@ in
     monitoring = {
       enable = lib.mkEnableOption "GPU monitoring tools";
     };
+
+    optimizations = {
+      enableKernelParams = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Apply recommended kernel parameters for Tesla GPUs (e.g., nvidia.NVRM=0).";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -75,6 +83,8 @@ in
     # Enable hardware acceleration
     hardware.graphics.enable = true;
     services.xserver.videoDrivers = [ "nvidia" ];
+
+    boot.kernelParams = lib.optionals cfg.optimizations.enableKernelParams [ "nvidia.NVRM=0" ];
 
     hardware.nvidia = {
       modesetting.enable = true;
