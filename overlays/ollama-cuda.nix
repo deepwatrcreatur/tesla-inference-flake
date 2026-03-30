@@ -3,13 +3,10 @@ final: prev:
 let
   # Import central architecture logic
   teslaLib = import ../lib { inherit (prev) lib; };
-  inherit (teslaLib) teslaArchitectures architectureSets;
+  inherit (teslaLib) teslaArchitectures architectureSets buildArchString;
 
   # Only enable CUDA overlays on Linux systems
   isLinux = final.stdenv.isLinux;
-
-  # Build CUDA architecture string for cmake
-  buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
 
   # Common CUDA dependencies for Tesla GPUs (Linux only)
   teslaUdaDeps = if isLinux then with final.cudaPackages; [
