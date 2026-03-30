@@ -64,6 +64,40 @@ in
 
     monitoring = {
       enable = lib.mkEnableOption "GPU monitoring tools";
+
+      tools = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = with pkgs; [
+          gpu-monitoring-tools
+          nvtop-tesla
+          tesla-gpu-info
+        ];
+        description = "GPU monitoring packages to install";
+      };
+
+      aliases = lib.mkOption {
+        type = lib.types.attrsOf lib.types.str;
+        default = {
+          gpuinfo = "tesla-gpu-info";
+          gputop = "nvtop";
+          gpumem = "nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits";
+          gpuwatch = "watch -n 1 nvidia-smi";
+          gputemp = "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits";
+        };
+        description = "Shell aliases for GPU monitoring commands";
+      };
+
+      enableSystemdService = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Enable systemd service for periodic GPU monitoring";
+      };
+
+      monitoringInterval = lib.mkOption {
+        type = lib.types.str;
+        default = "30s";
+        description = "Interval for GPU monitoring service";
+      };
     };
   };
 
@@ -101,6 +135,22 @@ in
         ReadWritePaths = lib.mkForce [ cfg.ollama.modelsPath ];
         WorkingDirectory = lib.mkForce cfg.ollama.modelsPath;
         StateDirectory = lib.mkForce "";
+
+        # Security hardening
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectSystem = "strict";
+        ProtectHome = true;
+
+        # GPU access
+        SupplementaryGroups = [ "video" ];
+        DevicePolicy = "closed";
+        DeviceAllow = [
+          "/dev/nvidia0 rw"
+          "/dev/nvidia-uvm rw"
+          "/dev/nvidia-modeset rw"
+          "/dev/nvidiactl rw"
+        ];
       };
     };
 
@@ -114,10 +164,36 @@ in
     ];
 
     # Add monitoring tools if enabled
-    environment.systemPackages = lib.optionals cfg.monitoring.enable [
-      pkgs.gpu-monitoring-tools
-      pkgs.tesla-gpu-info
-    ];
+    environment.systemPackages = lib.optionals cfg.monitoring.enable cfg.monitoring.tools;
+
+    # Add shell aliases if monitoring is enabled
+    programs.bash.shellAliases = lib.mkIf cfg.monitoring.enable cfg.monitoring.aliases;
+    programs.zsh.shellAliases = lib.mkIf cfg.monitoring.enable cfg.monitoring.aliases;
+    programs.fish.shellAliases = lib.mkIf cfg.monitoring.enable cfg.monitoring.aliases;
+
+    # Optional systemd monitoring service
+    systemd.services.gpu-monitor = lib.mkIf (cfg.monitoring.enable && cfg.monitoring.enableSystemdService) {
+      description = "GPU Monitoring Service";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.tesla-gpu-info}/bin/tesla-gpu-info";
+        User = "nobody";
+        Group = "nogroup";
+      };
+    };
+
+    systemd.timers.gpu-monitor = lib.mkIf (cfg.monitoring.enable && cfg.monitoring.enableSystemdService) {
+      description = "GPU Monitoring Timer";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = cfg.monitoringInterval;
+        OnUnitActiveSec = cfg.monitoringInterval;
+        Persistent = true;
+      };
+    };
+
+    # Ensure video group exists for GPU access
+    users.groups.video = {};
 
     # Allow unfree packages (NVIDIA drivers, CUDA)
     nixpkgs.config.allowUnfree = true;

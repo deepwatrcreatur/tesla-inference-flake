@@ -112,8 +112,6 @@
       # NixOS modules (system-independent)
       nixosModules = {
         tesla-inference = import ./modules/tesla-inference.nix;
-        ollama-cuda-service = import ./modules/ollama-cuda-service.nix;
-        gpu-monitoring = import ./modules/gpu-monitoring.nix;
         default = self.nixosModules.tesla-inference;
       };
 
