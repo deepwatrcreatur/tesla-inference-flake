@@ -116,11 +116,21 @@ let
   buildLlamaCppPythonForArchitectures = architectures:
     let
       effectiveArchitectures = effectiveArchitecturesForCuda architectures;
+      keepCudaArchFlag =
+        flag:
+        !(prev.lib.hasPrefix "-DCMAKE_CUDA_ARCHITECTURES=" flag)
+        && !(prev.lib.hasPrefix "-DGGML_CUDA_ARCHITECTURES=" flag)
+        && !(prev.lib.hasPrefix "-DCUDA_ARCHITECTURES=" flag);
     in
     if isLinux then prev.python3Packages.llama-cpp-python.overrideAttrs (old: {
+      cmakeFlags = builtins.filter keepCudaArchFlag (old.cmakeFlags or [ ]) ++ [
+        "-DGGML_CUDA=ON"
+        "-DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures}"
+        "-DGGML_CUDA_F16=ON"
+      ];
+
       # Set environment variables for CUDA compilation
       preBuild = (old.preBuild or "") + ''
-        export CMAKE_ARGS="-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DCUDA_ARCHITECTURES=${buildCmakeArchString effectiveArchitectures} -DGGML_CUDA_F16=ON"
         export CUDA_PATH=${final.cudaPackages.cudatoolkit}
         export CUDACXX=${final.cudaPackages.cuda_nvcc}/bin/nvcc
 
