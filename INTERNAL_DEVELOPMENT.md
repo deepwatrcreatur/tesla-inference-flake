@@ -37,6 +37,12 @@ When developing flakes that are consumed by other flakes, it's important to be m
 
 This made it very difficult to debug why the `ollama-official-binaries` overlay was not being used. The direct override in `configuration.nix` was taking precedence over the overlay.
 
-**Lesson Learned:** When possible, try to consolidate configuration into a single place. When that's not possible, be very explicit about the order of precedence. In this case, the `tesla-inference` module was intended to be the primary way to configure `ollama`, but the downstream `unified-nix-configuration` was overriding it.
+**Lesson Learned:** When possible, try to consolidate configuration into a single place. The `tesla-inference` module now exposes a `package` option that defaults to the optimized variant based on the `gpu` selection, making configuration more explicit and easier to debug.
 
-A better approach would be for the `tesla-inference` module to expose an option to select the `ollama` package, rather than relying on overlays. This would make the configuration more explicit and easier to debug.
+### Update Automation
+
+Ollama releases frequently, and manually updating hashes can be tedious.
+
+- **Solution:** A dedicated update script (`scripts/update-ollama.sh`) is exposed as a flake app (`nix run .#update-ollama`).
+- **Safety:** The script verifies asset availability via HTTP HEAD before updating, preventing broken links.
+- **CI:** A GitHub Action runs weekly to check for updates and automatically open Pull Requests.

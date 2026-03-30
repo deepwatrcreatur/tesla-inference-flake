@@ -24,7 +24,20 @@ Add to your `flake.nix`:
   };
 
   outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem { modules = [ tesla-inference.nixosModules.tesla-inference { tesla-inference = { enable = true; gpu = "P40"; # or K80, M40, etc. ollama.enable = true; }; } ]; }; }; }
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      modules = [
+        tesla-inference.nixosModules.tesla-inference
+        {
+          tesla-inference = {
+            enable = true;
+            gpu = "P40"; # Automatically selects optimized ollama-cuda-tesla-p40
+            ollama.enable = true;
+          };
+        }
+      ];
+    };
+  };
+}
 ```
 
 ### Direct Package Installation
@@ -32,8 +45,11 @@ Add to your `flake.nix`:
 Note: This flake includes unfree CUDA packages by default.
 
 ```bash
-# Install Tesla-optimized Ollama
+# Install Tesla-optimized Ollama (automatically selects best version for P40)
 nix profile install github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40
+
+# Update official binaries manually (optional)
+nix run github:deepwatrcreatur/tesla-inference-flake#update-ollama
 ```
 
 This flake provides **two approaches** for installing Ollama with Tesla GPU support:
