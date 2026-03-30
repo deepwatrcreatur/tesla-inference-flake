@@ -40,5 +40,7 @@
     tesla-maxwell = [ "52" ];      # M-series
     tesla-pascal = [ "60" "61" ];  # P-series
     tesla-all = [ "35" "37" "52" "60" "61" ];
+    # CI/build-safe set that avoids Kepler (nvcc 12.8+ on nix-ci.com rejects compute_35/37).
+    tesla-ci = [ "52" "60" "61" ];
   };
 }

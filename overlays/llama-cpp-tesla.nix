@@ -1,37 +1,16 @@
 final: prev:
 
 let
+  # Import central architecture logic
+  teslaLib = import ../lib { inherit (prev) lib; };
+  # llama-cpp-tesla's internal logic expects architectural versions as "X.Y"
+  # whereas lib.teslaArchitectures provides "XY". We convert here for compatibility.
+  toDotVersion = arch: prev.lib.concatStringsSep "." (prev.lib.stringToCharacters arch);
+  teslaArchitectures = prev.lib.mapAttrs (name: arches: map toDotVersion arches) teslaLib.teslaArchitectures;
+  architectureSets = prev.lib.mapAttrs (name: arches: map toDotVersion arches) teslaLib.architectureSets;
+
   # Only enable CUDA overlays on Linux systems
   isLinux = final.stdenv.isLinux;
-
-  # Tesla GPU CUDA architecture mappings (compute capability)
-  teslaArchitectures = {
-    "K20" = [ "3.5" ];
-    "K40" = [ "3.5" ];
-    "K80" = [ "3.7" ];
-    "M40" = [ "5.2" ];
-    "M60" = [ "5.2" ];
-    "P40" = [ "6.1" ];
-    "P100" = [ "6.0" ];
-  };
-
-  # Build CUDA architecture strings
-  buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
-  # For CMake's CMAKE_CUDA_ARCHITECTURES, dots are not allowed; use integer codes like 35, 61.
-  buildCmakeArchString = architectures:
-    prev.lib.concatStringsSep ";" (map (arch: prev.lib.replaceStrings ["."] [""] arch) architectures);
-
-  # Predefined architecture sets
-  architectureSets = {
-    tesla-legacy = [ "3.5" "3.7" ];    # K-series (Kepler)
-    tesla-maxwell = [ "5.2" ];         # M-series
-    tesla-pascal = [ "6.0" "6.1" ];    # P-series
-    tesla-all = [ "3.5" "3.7" "5.2" "6.0" "6.1" ];
-    # CI/build-safe set that avoids Kepler (nvcc 12.8+ on nix-ci.com rejects
-    # compute_35/37). Use this in CI jobs that must pass there, while keeping
-    # tesla-all for real deployments.
-    tesla-ci = [ "5.2" "6.0" "6.1" ];
-  };
 
   # Filter architectures based on the CUDA toolkit we are building against.
   # CUDA 12.8+ no longer supports Kepler (compute_35/37), so we drop those

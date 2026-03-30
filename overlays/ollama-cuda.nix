@@ -1,29 +1,15 @@
 final: prev:
 
 let
+  # Import central architecture logic
+  teslaLib = import ../lib { inherit (prev) lib; };
+  inherit (teslaLib) teslaArchitectures architectureSets;
+
   # Only enable CUDA overlays on Linux systems
   isLinux = final.stdenv.isLinux;
-  # Tesla GPU CUDA architecture mappings
-  teslaArchitectures = {
-    "K20" = [ "35" ];
-    "K40" = [ "35" ];
-    "K80" = [ "37" ];
-    "M40" = [ "52" ];
-    "M60" = [ "52" ];
-    "P40" = [ "61" ];
-    "P100" = [ "60" ];
-  };
 
   # Build CUDA architecture string for cmake
   buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
-
-  # Predefined architecture sets
-  architectureSets = {
-    tesla-legacy = [ "35" "37" ];  # K-series
-    tesla-maxwell = [ "52" ];      # M-series
-    tesla-pascal = [ "60" "61" ];  # P-series
-    tesla-all = [ "35" "37" "52" "60" "61" ];
-  };
 
   # Common CUDA dependencies for Tesla GPUs (Linux only)
   teslaUdaDeps = if isLinux then with final.cudaPackages; [
