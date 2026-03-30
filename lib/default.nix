@@ -20,7 +20,7 @@
   # Get CUDA architectures for a specific Tesla GPU
   getArchitectures = gpu:
     lib.attrByPath [gpu] (throw "Unsupported Tesla GPU: ${gpu}")
-      lib.teslaArchitectures;
+      teslaArchitectures;
 
   # Build CUDA architecture string for cmake
   buildArchString = architectures:
@@ -28,11 +28,11 @@
 
   # Check if a GPU supports a specific compute capability
   supportsCompute = gpu: capability:
-    lib.elem capability (lib.getArchitectures gpu);
+    lib.elem capability (getArchitectures gpu);
 
   # Get all supported architectures (useful for multi-GPU setups)
   getAllArchitectures = gpus:
-    lib.unique (lib.flatten (map lib.getArchitectures gpus));
+    lib.unique (lib.flatten (map getArchitectures gpus));
 
   # Predefined architecture sets for common configurations
   architectureSets = {
