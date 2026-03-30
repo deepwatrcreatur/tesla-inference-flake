@@ -88,11 +88,10 @@
           '';
         };
 
-        # CI checks
-        checks = {
-          # Verify all packages build
+        # CI checks (Linux-only; Ollama official binaries are x86_64-linux)
+        checks = pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          # Verify key packages evaluate
           packages-build = pkgs.runCommand "check-packages-build" {
-            # Reference key packages to ensure they evaluate
             inherit (teslaPackages) ollama-official-binaries tesla-gpu-info llama-cpp-tesla;
           } ''
             echo "Checking that key packages are defined..."
