@@ -38,7 +38,13 @@ in
             };
           in
           packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
-        defaultText = lib.literalExpression "pkgs.ollama-cuda-tesla-<suffix>";
+        defaultText = lib.literalMD ''
+          GPU-specific package selected based on `gpu`:
+          - `P40` → `pkgs.ollama-cuda-tesla-p40`
+          - `P100` → `pkgs.ollama-cuda-tesla-pascal`
+          - `M40`/`M60` → `pkgs.ollama-cuda-tesla-maxwell`
+          - K-series → `pkgs.ollama-cuda-tesla`
+        '';
         description = ''
           Ollama package to use. Defaults to a GPU-optimized variant based on the `gpu` setting:
           - P40: `ollama-cuda-tesla-p40`
