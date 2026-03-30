@@ -19,28 +19,55 @@
           # Use inference configuration module
           tesla-inference.nixosModules.tesla-inference
 
-          {
+          ({ pkgs, ... }: {
             # Tesla P40-specific configuration
-            networking.hostName = "inference-host";
-            boot.kernelParams = [
-              # P40 requires these kernel params for proper GPU access
-              "nvidia.NVRM" = "0"
-            ];
-
-            # Use official binaries ollama
-            services.ollama = {
+            tesla-inference = {
               enable = true;
-              package = pkgs.ollama-official-binaries;
-              host = "0.0.0.0";
-              port = 11434;
-              environmentVariables = {
-                CUDA_VISIBLE_DEVICES = "0";
-                OLLAMA_GPU_OVERHEAD = "0";
-                # Point to bundled CUDA libraries and system CUDA driver
-                LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+              gpu = "P40";
+
+              # Use official binaries ollama
+              ollama = {
+                enable = true;
+                package = pkgs.ollama-official-binaries;
+                modelsPath = "/models/ollama";
+                host = "0.0.0.0";
+                port = 11434;
+                environmentVariables = {
+                  CUDA_VISIBLE_DEVICES = "0";
+                  OLLAMA_GPU_OVERHEAD = "0";
+                  # Point to bundled CUDA libraries and system CUDA driver
+                  LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+                };
               };
+
+              monitoring.enable = true;
             };
-          }
+
+            # Basic system configuration
+            boot.loader.systemd-boot.enable = true;
+            boot.loader.efi.canTouchEfiVariables = true;
+
+            fileSystems."/" = {
+              device = "/dev/disk/by-label/nixos";
+              fsType = "ext4";
+            };
+
+            fileSystems."/boot" = {
+              device = "/dev/disk/by-label/boot";
+              fsType = "vfat";
+            };
+
+            networking.hostName = "inference-host";
+            networking.firewall.enable = false; # Adjust for your security needs
+
+            services.openssh.enable = true;
+            users.users.admin = {
+              isNormalUser = true;
+              extraGroups = [ "wheel" ];
+            };
+
+            system.stateVersion = "24.11";
+          })
         ];
       };
     };
