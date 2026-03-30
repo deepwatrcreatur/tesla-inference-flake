@@ -32,6 +32,7 @@ jobs:
 
     - name: Verify templates
       run: |
+        rm -rf /tmp/template-test/p40 /tmp/template-test/p40-binaries
         mkdir -p /tmp/template-test/p40 /tmp/template-test/p40-binaries
         cd /tmp/template-test/p40
         nix flake init -t ${GITHUB_WORKSPACE}#tesla-p40
