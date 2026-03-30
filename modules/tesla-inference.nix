@@ -26,6 +26,34 @@ in
     ollama = {
       enable = lib.mkEnableOption "Ollama inference service";
 
+      package = lib.mkOption {
+        type = lib.types.package;
+        default =
+          let
+            packageMap = {
+              "P40" = pkgs.ollama-cuda-tesla-p40;
+              "P100" = pkgs.ollama-cuda-tesla-pascal;
+              "M40" = pkgs.ollama-cuda-tesla-maxwell;
+              "M60" = pkgs.ollama-cuda-tesla-maxwell;
+            };
+          in
+          packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
+        defaultText = lib.literalMD ''
+          GPU-specific package selected based on `gpu`:
+          - `P40` → `pkgs.ollama-cuda-tesla-p40`
+          - `P100` → `pkgs.ollama-cuda-tesla-pascal`
+          - `M40`/`M60` → `pkgs.ollama-cuda-tesla-maxwell`
+          - K-series → `pkgs.ollama-cuda-tesla`
+        '';
+        description = ''
+          Ollama package to use. Defaults to a GPU-optimized variant based on the `gpu` setting:
+          - P40: `ollama-cuda-tesla-p40`
+          - P100: `ollama-cuda-tesla-pascal`
+          - M40/M60: `ollama-cuda-tesla-maxwell`
+          - K-series (default): `ollama-cuda-tesla`
+        '';
+      };
+
       modelsPath = lib.mkOption {
         type = lib.types.str;
         default = "/models/ollama";
@@ -143,6 +171,7 @@ in
     # Configure Ollama service if enabled
     services.ollama = lib.mkIf cfg.ollama.enable {
       enable = true;
+      package = cfg.ollama.package;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
       environmentVariables = cfg.ollama.environmentVariables // {
