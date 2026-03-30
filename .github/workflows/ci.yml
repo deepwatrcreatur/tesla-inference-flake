@@ -36,3 +36,23 @@ jobs:
         cd /tmp/template-test
         nix flake init -t ${GITHUB_WORKSPACE}#tesla-p40
         nix flake check
+
+  evaluation-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gpu: [P40, M40, K80]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: DeterminateSystems/magic-nix-cache-action@main
+    - name: Check package evaluation for ${{ matrix.gpu }}
+      run: |
+        nix eval .#packages.x86_64-linux.ollama-cuda-tesla-p40 --apply 'x: "eval-ok"'
+        if [ "${{ matrix.gpu }}" == "P40" ]; then
+          nix eval .#packages.x86_64-linux.ollama-cuda-tesla-p40 --apply 'x: "eval-ok"'
+        elif [ "${{ matrix.gpu }}" == "M40" ]; then
+          nix eval .#packages.x86_64-linux.ollama-cuda-tesla-maxwell --apply 'x: "eval-ok"'
+        elif [ "${{ matrix.gpu }}" == "K80" ]; then
+          nix eval .#packages.x86_64-linux.ollama-cuda-tesla --apply 'x: "eval-ok"'
+        fi
