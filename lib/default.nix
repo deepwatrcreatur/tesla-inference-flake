@@ -1,6 +1,6 @@
 { lib }:
 
-{
+rec {
   # Tesla GPU CUDA architecture mappings
   teslaArchitectures = {
     # Kepler generation
