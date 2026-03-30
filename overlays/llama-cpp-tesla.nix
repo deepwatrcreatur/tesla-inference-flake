@@ -12,6 +12,12 @@ let
   # Only enable CUDA overlays on Linux systems
   isLinux = final.stdenv.isLinux;
 
+  # Build CUDA architecture strings
+  buildArchString = architectures: prev.lib.concatStringsSep ";" architectures;
+  # For CMake's CMAKE_CUDA_ARCHITECTURES, dots are not allowed; use integer codes like 35, 61.
+  buildCmakeArchString = architectures:
+    prev.lib.concatStringsSep ";" (map (arch: prev.lib.replaceStrings ["."] [""] arch) architectures);
+
   # Filter architectures based on the CUDA toolkit we are building against.
   # CUDA 12.8+ no longer supports Kepler (compute_35/37), so we drop those
   # architectures from the *effective* build set when running on such
