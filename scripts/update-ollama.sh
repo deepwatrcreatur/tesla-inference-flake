@@ -41,11 +41,14 @@ if [ -z "$NEW_HASH" ]; then
 fi
 
 echo "Updating $OVERLAY_FILE..."
-# Update version
-sed -i "s/version = \"$CURRENT_VERSION\";/version = \"$VERSION\";/" "$OVERLAY_FILE"
-# Update hash (using the old hash as the anchor to ensure we replace the correct one)
 OLD_HASH=$(grep 'sha256 =' "$OVERLAY_FILE" | head -n1 | cut -d'"' -f2)
-sed -i "s/sha256 = \"$OLD_HASH\";/sha256 = \"$NEW_HASH\";/" "$OVERLAY_FILE"
+
+# Atomic update using a temporary file and single sed command
+TEMP_FILE=$(mktemp)
+sed -e "s/version = \"$CURRENT_VERSION\";/version = \"$VERSION\";/" \
+    -e "s/sha256 = \"$OLD_HASH\";/sha256 = \"$NEW_HASH\";/" \
+    "$OVERLAY_FILE" > "$TEMP_FILE"
+mv "$TEMP_FILE" "$OVERLAY_FILE"
 
 echo "Successfully updated Ollama to v$VERSION"
 echo "Hash: $NEW_HASH"
