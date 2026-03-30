@@ -175,4 +175,12 @@ in {
 
   # Convenience alias for most common Tesla use case
   llama-cpp-tesla-generic = final.llama-cpp-tesla-pascal;
+
+  # Override standard llama-cpp for drop-in compatibility
+  llama-cpp = final.llama-cpp-tesla;
+
+  # Override python3Packages.llama-cpp-python
+  python3Packages = prev.python3Packages // {
+    llama-cpp-python = final.python3Packages.llama-cpp-python-tesla;
+  };
 }
