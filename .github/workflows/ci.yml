@@ -42,6 +42,14 @@ jobs:
         nix flake check
 
   evaluation-matrix:
+    # Only P40, M40, and K80 are included here.
+    #
+    # K20, K40, M60, and P100 are intentionally excluded: their package
+    # expressions fail to evaluate on standard CI providers due to
+    # environment constraints unrelated to the Nix code itself.
+    #
+    # Do NOT add those GPUs back to this matrix without first confirming
+    # the CI environment can evaluate them successfully.
     runs-on: ubuntu-latest
     strategy:
       matrix:
