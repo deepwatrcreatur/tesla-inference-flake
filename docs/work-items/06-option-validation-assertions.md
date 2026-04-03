@@ -1,6 +1,6 @@
 # Option Validation Assertions
 
-Status: `ready`
+Status: `in-progress`
 Suggested branch: `feat/option-validation-assertions`
 Priority: `medium`
 
