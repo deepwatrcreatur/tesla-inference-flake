@@ -76,6 +76,14 @@ deployments that need K-series GPUs should continue to use the full
    - A better next step is a lightweight “all supported enum values evaluate”
      path, not a misleading full hardware matrix.
 
+6. **Two module follow-ups are worth tracking explicitly.**
+   - If `cudaArchitectures` is exposed as a user-facing option, the module
+     should either implement it end-to-end or document clearly that it is not
+     yet wired into package selection.
+   - Legacy Tesla/Kepler users may also benefit from clearer NVIDIA driver
+     guidance so older cards do not depend on trial-and-error host driver
+     selection.
+
 ### Suggested direction (next few PRs)
 
 1. **Clean up the CI evaluation matrix.**
@@ -103,6 +111,12 @@ deployments that need K-series GPUs should continue to use the full
    - Consider assertions for obviously invalid or contradictory option
      combinations, especially when users combine custom CUDA architecture
      overrides with package overrides.
+
+6. **Clarify advanced legacy-GPU behavior.**
+   - Either wire `cudaArchitectures` into the module behavior or narrow its
+     contract so the option is not misleading.
+   - Add a small note or follow-up task around recommended NVIDIA driver
+     selection for older Tesla/Kepler-era cards.
 
 ### Success metrics to track
 
