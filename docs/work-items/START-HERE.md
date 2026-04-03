@@ -20,7 +20,7 @@ The authoritative queue is the ordered list in [`README.md`](./README.md).
 
 0. Refresh remote state first: `git fetch origin`
 1. Start with the ordered list in [`README.md`](./README.md).
-2. Find the first item whose header says `Status: ready`.
+2. Find the first item whose header says `Status: `ready``.
 3. If the suggested branch/worktree exists, treat that only as a hint.
 4. Once you take an item:
    - create/switch to the suggested branch
