@@ -1,6 +1,6 @@
 # CI Eval Cleanup
 
-Status: `ready`
+Status: `done`
 Suggested branch: `ci/eval-cleanup`
 Priority: `high`
 
