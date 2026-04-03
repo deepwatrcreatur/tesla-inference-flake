@@ -151,6 +151,17 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = !(cfg.monitoring.enableSystemdService && !cfg.monitoring.enable);
+        message = "tesla-inference: monitoring.enableSystemdService = true has no effect when monitoring.enable = false";
+      }
+      {
+        assertion = lib.hasPrefix "/" cfg.ollama.modelsPath;
+        message = "tesla-inference: ollama.modelsPath must be an absolute path (got \"${cfg.ollama.modelsPath}\")";
+      }
+    ];
+
     # Note: nixpkgs overlays should be applied by the flake that uses this module.
     # This module expects the tesla-inference overlays to already be available.
     # See the example templates for how to properly apply overlays.
