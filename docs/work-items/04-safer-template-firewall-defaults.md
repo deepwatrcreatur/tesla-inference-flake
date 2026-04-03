@@ -1,6 +1,6 @@
 # Safer Template Firewall Defaults
 
-Status: `in-progress`
+Status: `done`
 Suggested branch: `docs/safer-template-firewall-defaults`
 Priority: `medium`
 

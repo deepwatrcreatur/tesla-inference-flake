@@ -45,7 +45,7 @@
           };
 
           networking.hostName = "inference-host";
-          networking.firewall.enable = false; # Adjust for your security needs
+          networking.firewall.allowedTCPPorts = [ 11434 ]; # Ollama API
 
           services.openssh.enable = true;
           users.users.admin = {
