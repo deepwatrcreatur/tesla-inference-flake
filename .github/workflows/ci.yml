@@ -54,12 +54,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - gpu: P40
-            package: ollama-cuda-tesla-p40
-          - gpu: M40
-            package: ollama-cuda-tesla-maxwell
           - gpu: K80
             package: ollama-cuda-tesla
+          - gpu: M40
+            package: ollama-cuda-tesla-maxwell
+          - gpu: P40
+            package: ollama-cuda-tesla-p40
     steps:
     - uses: actions/checkout@v4
     - uses: DeterminateSystems/nix-installer-action@main
