@@ -201,6 +201,16 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 ```
 
+## Agent Work Queue
+
+If you are assigning or running agents against this repo, start with:
+
+- [`docs/work-items/START-HERE.md`](docs/work-items/START-HERE.md)
+
+The seed roadmap behind that queue is tracked in:
+
+- [`docs/improvements.md`](docs/improvements.md)
+
 ## Supported Tesla GPUs
 
 | GPU Series | Models | Compute Capability | Architecture |
