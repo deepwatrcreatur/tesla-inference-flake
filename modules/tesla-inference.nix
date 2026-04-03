@@ -180,8 +180,8 @@ in
       };
     };
 
-    # Open firewall port if needed (check both IPv4 and IPv6 loopback)
-    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1" && cfg.ollama.host != "::1") [ cfg.ollama.port ];
+    # Open firewall port if needed (check IPv4, IPv6, and hostname loopback forms)
+    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1" && cfg.ollama.host != "::1" && cfg.ollama.host != "localhost") [ cfg.ollama.port ];
 
     # Model storage configuration
     systemd.services.ollama = lib.mkIf cfg.ollama.enable {

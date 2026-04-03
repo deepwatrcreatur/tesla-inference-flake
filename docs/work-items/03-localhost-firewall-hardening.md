@@ -1,6 +1,6 @@
 # Localhost Firewall Hardening
 
-Status: `in-progress`
+Status: `done`
 Suggested branch: `fix/localhost-firewall-hardening`
 Priority: `high`
 
