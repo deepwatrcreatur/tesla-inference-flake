@@ -65,4 +65,5 @@ jobs:
     - uses: DeterminateSystems/nix-installer-action@main
     - uses: DeterminateSystems/magic-nix-cache-action@main
     - name: Check package evaluation for ${{ matrix.gpu }}
-      run: nix eval .#packages.x86_64-linux.${{ matrix.package }} --apply 'x: "eval-ok"'
+      run: |
+        nix eval .#packages.x86_64-linux.${{ matrix.package }} --apply 'x: "eval-ok"'
