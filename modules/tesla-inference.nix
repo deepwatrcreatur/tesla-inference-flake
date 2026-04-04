@@ -23,6 +23,9 @@ let
         does not expose nvidiaPackages.legacy_580 yet. Pin nixpkgs to a revision where
         production is still 580.x or provide a 580-based driver package override.
       '';
+  teslaLib = import ../lib { inherit lib; };
+  allowedCudaArchitectures = lib.flatten (lib.attrValues teslaLib.teslaArchitectures);
+  gpuArchitectures = teslaLib.getArchitectures cfg.gpu;
 in
 {
   options.tesla-inference = {
@@ -36,7 +39,11 @@ in
     cudaArchitectures = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
-      description = "Custom CUDA compute architectures (overrides gpu setting)";
+      description = ''
+        Custom CUDA compute architectures for advanced setups (multi-GPU, legacy cards).
+        Used for validation and to inform Ollama's CUDA_* environment; leave empty to
+        derive architectures from the selected GPU.
+      '';
     };
 
     ollama = {
@@ -176,6 +183,21 @@ in
         assertion = lib.hasPrefix "/" cfg.ollama.modelsPath;
         message = "tesla-inference: ollama.modelsPath must be an absolute path (got \"${cfg.ollama.modelsPath}\")";
       }
+      {
+        assertion = lib.all (arch: lib.elem arch allowedCudaArchitectures) cfg.cudaArchitectures;
+        message = ''
+          tesla-inference: cudaArchitectures must be a list of known Tesla compute
+          capabilities (one of: ${lib.concatStringsSep ", " allowedCudaArchitectures}).
+        '';
+      }
+      {
+        assertion = cfg.cudaArchitectures == [ ] || lib.all (arch: lib.elem arch cfg.cudaArchitectures) gpuArchitectures;
+        message = ''
+          tesla-inference: cudaArchitectures does not include the compute capabilities
+          for GPU ${cfg.gpu}. Either clear tesla-inference.cudaArchitectures or include
+          ${lib.concatStringsSep ", " gpuArchitectures}.
+        '';
+      }
     ];
 
     # Note: nixpkgs overlays should be applied by the flake that uses this module.
@@ -204,10 +226,15 @@ in
       package = cfg.ollama.package;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
-      environmentVariables = cfg.ollama.environmentVariables // {
-        OLLAMA_HOST = "${cfg.ollama.host}:${toString cfg.ollama.port}";
-        OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
-      };
+      environmentVariables =
+        cfg.ollama.environmentVariables
+        // ({
+          OLLAMA_HOST = "${cfg.ollama.host}:${toString cfg.ollama.port}";
+          OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
+        } // lib.optionalAttrs (cfg.cudaArchitectures != [ ]) {
+          CUDA_ARCHITECTURES = teslaLib.buildArchString cfg.cudaArchitectures;
+          GGML_CUDA_ARCHITECTURES = teslaLib.buildArchString cfg.cudaArchitectures;
+        });
     };
 
     # Open firewall port if needed (check IPv4, IPv6, and hostname loopback forms)
