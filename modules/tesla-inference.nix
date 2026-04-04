@@ -1,12 +1,28 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
+{ config
+, lib
+, pkgs
+, ...
 }:
 
 let
   cfg = config.tesla-inference;
+  isMaxwell = lib.elem cfg.gpu [ "M40" "M60" ];
+  nvidiaPackages = config.boot.kernelPackages.nvidiaPackages;
+  maxwellDriverPackage =
+    if nvidiaPackages ? legacy_580 then
+      nvidiaPackages.legacy_580
+    else if lib.hasPrefix "580." nvidiaPackages.production.version then
+    # Keep Maxwell on the 580 line until nixpkgs exposes an explicit legacy_580
+    # attribute. This prevents a silent jump to a newer branch that may drop
+    # Maxwell support.
+      nvidiaPackages.production
+    else
+      throw ''
+        tesla-inference: Maxwell GPUs (M40/M60) must stay on NVIDIA's 580 driver branch.
+        Current production driver version is ${nvidiaPackages.production.version}, and nixpkgs
+        does not expose nvidiaPackages.legacy_580 yet. Pin nixpkgs to a revision where
+        production is still 580.x or provide a 580-based driver package override.
+      '';
 in
 {
   options.tesla-inference = {
@@ -19,7 +35,7 @@ in
 
     cudaArchitectures = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
+      default = [ ];
       description = "Custom CUDA compute architectures (overrides gpu setting)";
     };
 
@@ -37,7 +53,7 @@ in
               "M60" = pkgs.ollama-cuda-tesla-maxwell;
             };
           in
-          packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
+            packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
         defaultText = lib.literalMD ''
           GPU-specific package selected based on `gpu`:
           - `P40` → `pkgs.ollama-cuda-tesla-p40`
@@ -85,7 +101,7 @@ in
 
       environmentVariables = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
-        default = {};
+        default = { };
         description = "Additional environment variables for Ollama";
       };
     };
@@ -176,7 +192,10 @@ in
       modesetting.enable = true;
       open = false; # Tesla GPUs need proprietary driver
       nvidiaSettings = true;
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      # Maxwell support lives on the maintained 580 branch. Keep M40/M60 off the
+      # generic stable path so a future nixpkgs bump does not silently move them
+      # to a branch that dropped Maxwell support.
+      package = if isMaxwell then maxwellDriverPackage else nvidiaPackages.stable;
     };
 
     # Configure Ollama service if enabled
@@ -266,7 +285,7 @@ in
     };
 
     # Ensure video group exists for GPU access
-    users.groups.video = {};
+    users.groups.video = { };
 
     # Allow unfree packages (NVIDIA drivers, CUDA)
     nixpkgs.config.allowUnfree = true;
