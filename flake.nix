@@ -150,6 +150,10 @@
           path = ./examples/modern-gpu;
           description = "Modern GPU inference configuration template";
         };
+        tesla-p40-binaries = {
+          path = ./examples/tesla-p40-binaries;
+          description = "Tesla P40 inference configuration using official ollama binaries";
+        };
       };
     };
 }
