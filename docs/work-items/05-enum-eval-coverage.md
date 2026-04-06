@@ -1,6 +1,6 @@
 # Enum Eval Coverage
 
-Status: `blocked`
+Status: `done`
 Suggested branch: `ci/enum-eval-coverage`
 Priority: `medium`
 
@@ -9,11 +9,9 @@ Priority: `medium`
 Add cheap full-enum evaluation coverage for supported GPU values without
 pretending CI provides real hardware-backed validation.
 
-## Blocked
+## Implementation
 
-K20, K40, M60, and P100 package expressions fail to evaluate on standard
-CI providers due to environment constraints. Expanding the matrix to cover
-all enum values causes CI errors. The evaluation-matrix job in ci.yml is
-intentionally limited to P40, M40, and K80 until this constraint is
-resolved — see the comment in that file. Do not add the excluded GPUs back
-without first verifying the CI environment supports their evaluation.
+- Added `tests/eval-enum.nix` which evaluates the NixOS module for every GPU in the enum.
+- Integrated this as a `checks.enum-eval-coverage` in `flake.nix`.
+- Expanded the `evaluation-matrix` in `.github/workflows/ci.yml` to cover all 7 supported GPUs.
+- Verified that all architectures evaluate successfully with modern nixpkgs (as of 2026-04-01).

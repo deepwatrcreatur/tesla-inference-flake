@@ -110,10 +110,23 @@
             echo "Checking that key packages are defined..."
             echo "✓ ollama-official-binaries: $ollama_official_binaries"
             echo "✓ tesla-gpu-info: $tesla_gpu_info"
-            echo "✓ llama-cpp-tesla: $llama_cpp_tesla"
+            echo "✓ llama-cpp-tesla: $llama-cpp-tesla"
             echo "✓ Package definitions evaluate successfully"
             touch $out
           '';
+
+          # Verify module evaluation for all supported GPU enums
+          enum-eval-coverage =
+            let
+              evals = import ./tests/eval-enum.nix { pkgs = pkgsWithOverlays; inherit self; };
+            in
+            (pkgsWithOverlays.runCommand "check-enum-eval-coverage" {
+              inherit evals;
+            } ''
+              echo "Checking enum evaluation coverage..."
+              echo "✓ Evaluation results for all GPUs: $evals"
+              touch $out
+            '') // { inherit evals; };
         };
       }
     ) // {
