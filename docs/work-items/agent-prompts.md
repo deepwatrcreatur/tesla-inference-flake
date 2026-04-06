@@ -71,3 +71,14 @@ Task:
 - evaluate nixpkgs vllm as an integration question, not a fresh packaging task
 - keep newer-GPU support and legacy Tesla research clearly separated
 - do not claim P40 support without hard evidence
+
+## Prompt 8: P40 Retirement Threshold
+
+Work on [`08-p40-retirement-threshold.md`](./08-p40-retirement-threshold.md).
+
+Create a branch named `docs/p40-retirement-threshold`.
+
+Task:
+- define when P40 support remains worth keeping
+- separate legacy-capacity value from forward-looking engineering investment
+- leave behind concrete retirement or sunset criteria
