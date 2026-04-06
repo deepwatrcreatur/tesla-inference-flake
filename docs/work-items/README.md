@@ -16,6 +16,7 @@ Highest value first:
 4. `04-safer-template-firewall-defaults.md`
 5. `05-enum-eval-coverage.md`
 6. `06-option-validation-assertions.md`
+7. `07-vllm-package-scope-evaluation.md`
 
 ## Status Model
 
