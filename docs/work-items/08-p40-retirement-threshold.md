@@ -1,6 +1,6 @@
 # 08 P40 Retirement Threshold
 
-Status: `ready`
+Status: `in-progress`
 Suggested branch: `docs/p40-retirement-threshold`
 Priority: `medium`
 
