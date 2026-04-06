@@ -1,6 +1,6 @@
 # 07 Vllm Package Scope Evaluation
 
-Status: `ready`
+Status: `in-progress`
 Suggested branch: `research/vllm-package-scope`
 Priority: `medium`
 
