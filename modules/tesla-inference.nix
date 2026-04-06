@@ -54,26 +54,29 @@ in
         default =
           let
             packageMap = {
-              "P40" = pkgs.ollama-cuda-tesla-p40;
-              "P100" = pkgs.ollama-cuda-tesla-pascal;
+              "K20" = pkgs.ollama-cuda-tesla;
+              "K40" = pkgs.ollama-cuda-tesla;
+              "K80" = pkgs.ollama-cuda-tesla;
               "M40" = pkgs.ollama-cuda-tesla-maxwell;
               "M60" = pkgs.ollama-cuda-tesla-maxwell;
+              "P40" = pkgs.ollama-cuda-tesla-p40;
+              "P100" = pkgs.ollama-cuda-tesla-pascal;
             };
           in
             packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
         defaultText = lib.literalMD ''
           GPU-specific package selected based on `gpu`:
+          - `K20`/`K40`/`K80` → `pkgs.ollama-cuda-tesla`
+          - `M40`/`M60` → `pkgs.ollama-cuda-tesla-maxwell`
           - `P40` → `pkgs.ollama-cuda-tesla-p40`
           - `P100` → `pkgs.ollama-cuda-tesla-pascal`
-          - `M40`/`M60` → `pkgs.ollama-cuda-tesla-maxwell`
-          - K-series → `pkgs.ollama-cuda-tesla`
         '';
         description = ''
           Ollama package to use. Defaults to a GPU-optimized variant based on the `gpu` setting:
+          - K20, K40, K80: `ollama-cuda-tesla`
+          - M40, M60: `ollama-cuda-tesla-maxwell`
           - P40: `ollama-cuda-tesla-p40`
           - P100: `ollama-cuda-tesla-pascal`
-          - M40/M60: `ollama-cuda-tesla-maxwell`
-          - K-series (default): `ollama-cuda-tesla`
         '';
       };
 

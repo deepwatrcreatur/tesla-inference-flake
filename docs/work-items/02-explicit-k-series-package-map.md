@@ -1,6 +1,6 @@
 # Explicit K-Series Package Map
 
-Status: `ready`
+Status: `done`
 Suggested branch: `refactor/explicit-k-series-package-map`
 Priority: `high`
 
