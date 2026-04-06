@@ -1,6 +1,6 @@
 # CUDA Compiler Pinning
 
-Status: `ready`
+Status: `done`
 Priority: `medium`
 Branch: `refactor/cuda-compiler-pinning-design`
 

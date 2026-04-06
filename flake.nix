@@ -66,6 +66,13 @@
 
         # Development shell with full CUDA development environment
         devShells.default = pkgs.mkShell {
+          # Use a CUDA-aware stdenv where available so nvcc and C++ runtimes are
+          # aligned. Fall back to the default stdenv if cudaPackages has no
+          # backendStdenv in this nixpkgs revision.
+          stdenv = if builtins.hasAttr "backendStdenv" pkgs.cudaPackages
+                   then pkgs.cudaPackages.backendStdenv
+                   else pkgs.stdenv;
+
           buildInputs = with pkgs; [
             # Development tools
             git
@@ -112,6 +119,14 @@
             echo "✓ tesla-gpu-info: $tesla_gpu_info"
             echo "✓ llama-cpp-tesla: $llama_cpp_tesla"
             echo "✓ Package definitions evaluate successfully"
+            touch $out
+          '';
+
+          # Spike: exercise a representative Tesla CUDA build (llama-cpp-tesla-ci)
+          cuda-compiler-pinning-spike = pkgs.runCommand "cuda-compiler-pinning-spike" {
+            inherit (teslaPackages) llama-cpp-tesla-ci;
+          } ''
+            echo "Exercising CUDA compiler pinning spike with llama-cpp-tesla-ci: $llama_cpp_tesla_ci"
             touch $out
           '';
         };
