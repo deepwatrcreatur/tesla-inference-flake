@@ -1,6 +1,6 @@
 # Optimize Closure Size via cuda-redist
 
-Status: `ready`
+Status: `in-progress`
 Suggested branch: `perf/cuda-redist-optimization`
 Priority: `medium`
 
@@ -10,6 +10,6 @@ Reduce the multi-gigabyte closure size of inference packages by utilizing granul
 
 ## Tasks
 
-- [ ] Identify large monolithic dependencies in `ollama` and `llama-cpp`.
-- [ ] Replace broad `cudatoolkit` imports with specific `cudaPackages.libcublas`, `cudaPackages.libcufft`, etc.
+- [x] Verified that `cudatoolkit` is NOT in the closure; redists are already in use.
+- [ ] Investigate removing `openblas` (83 MiB) and `blas` (143 MiB) from `llama-cpp` when CUDA is enabled.
 - [ ] Verify that the final package closure size is significantly reduced.

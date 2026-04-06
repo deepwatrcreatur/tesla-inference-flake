@@ -1,6 +1,6 @@
 # Migrate to pkgsForCudaArch
 
-Status: `ready`
+Status: `done`
 Suggested branch: `refactor/pkgs-for-cuda-arch`
 Priority: `high`
 

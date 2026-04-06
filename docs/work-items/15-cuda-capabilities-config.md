@@ -1,6 +1,6 @@
 # Implement config.cudaCapabilities
 
-Status: `ready`
+Status: `done`
 Suggested branch: `feat/cuda-capabilities-config`
 Priority: `medium`
 

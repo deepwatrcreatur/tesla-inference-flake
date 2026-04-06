@@ -18,11 +18,12 @@ Highest value first:
 6. `06-option-validation-assertions.md`
 7. `07-vllm-package-scope-evaluation.md`
 8. `08-p40-retirement-threshold.md`
-9. `14-pkgs-for-cuda-arch.md`
-10. `15-cuda-capabilities-config.md`
-11. `16-cuda-redist-optimization.md`
-12. `17-cuda-compiler-pinning.md`
-13. `18-standardize-arch-flags.md`
+9. `13-llama-cpp-distributed-research.md`
+10. `14-pkgs-for-cuda-arch.md`
+11. `15-cuda-capabilities-config.md`
+12. `16-cuda-redist-optimization.md`
+13. `17-cuda-compiler-pinning.md`
+14. `18-standardize-arch-flags.md`
 
 ## Status Model
 
