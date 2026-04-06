@@ -22,7 +22,14 @@ rec {
     lib.attrByPath [gpu] (throw "Unsupported Tesla GPU: ${gpu}")
       teslaArchitectures;
 
-  # Build CUDA architecture string for cmake
+  # Convert "61" to "6.1" for nixpkgs.config.cudaCapabilities
+  toDotVersion = arch: lib.concatStringsSep "." (lib.stringToCharacters arch);
+
+  # Get CUDA capabilities (dot version) for a specific Tesla GPU
+  getCapabilities = gpu:
+    map toDotVersion (getArchitectures gpu);
+
+  # Get CUDA architecture string for cmake (semicolon separated)
   buildArchString = architectures:
     lib.concatStringsSep ";" architectures;
 

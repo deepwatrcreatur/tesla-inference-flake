@@ -314,7 +314,15 @@ in
     # Ensure video group exists for GPU access
     users.groups.video = { };
 
-    # Allow unfree packages (NVIDIA drivers, CUDA)
-    nixpkgs.config.allowUnfree = true;
+    # Global CUDA optimizations for Tesla hardware
+    nixpkgs.config = {
+      allowUnfree = true;
+      cudaSupport = true;
+      cudaCapabilities =
+        if cfg.cudaArchitectures != [ ] then
+          map teslaLib.toDotVersion cfg.cudaArchitectures
+        else
+          teslaLib.getCapabilities cfg.gpu;
+    };
   };
 }
