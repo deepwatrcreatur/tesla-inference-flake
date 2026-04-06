@@ -30,6 +30,9 @@ jobs:
         nix eval .#overlays.ollama-cuda --apply 'x: "overlay-evaluates"'
         nix eval .#overlays.gpu-tools --apply 'x: "overlay-evaluates"'
 
+    - name: Verify enum evaluation coverage
+      run: nix eval .#checks.x86_64-linux.enum-eval-coverage --apply 'x: "eval-ok"'
+
     - name: Verify templates
       run: |
         rm -rf /tmp/template-test/p40 /tmp/template-test/p40-binaries
@@ -42,19 +45,31 @@ jobs:
         nix flake check
 
   evaluation-matrix:
+    # Verifies that the Nix package expression for each supported GPU enum
+    # value evaluates without error. This is pure expression evaluation —
+    # no GPU hardware is present or required in CI.
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - gpu: P40
-            package: ollama-cuda-tesla-p40
-          - gpu: M40
-            package: ollama-cuda-tesla-maxwell
+          - gpu: K20
+            package: ollama-cuda-tesla
+          - gpu: K40
+            package: ollama-cuda-tesla
           - gpu: K80
             package: ollama-cuda-tesla
+          - gpu: M40
+            package: ollama-cuda-tesla-maxwell
+          - gpu: M60
+            package: ollama-cuda-tesla-maxwell
+          - gpu: P40
+            package: ollama-cuda-tesla-p40
+          - gpu: P100
+            package: ollama-cuda-tesla-pascal
     steps:
     - uses: actions/checkout@v4
     - uses: DeterminateSystems/nix-installer-action@main
     - uses: DeterminateSystems/magic-nix-cache-action@main
     - name: Check package evaluation for ${{ matrix.gpu }}
-      run: nix eval .#packages.x86_64-linux.${{ matrix.package }} --apply 'x: "eval-ok"'
+      run: |
+        nix eval .#packages.x86_64-linux.${{ matrix.package }} --apply 'x: "eval-ok"'

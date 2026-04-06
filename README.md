@@ -9,6 +9,7 @@ A Nix flake providing CUDA-optimized inference tools for Tesla GPUs (K-series, M
 - **Ollama with CUDA**: Pre-built Ollama packages with Tesla-optimized CUDA support
 - **GPU Monitoring**: Enhanced monitoring tools with Tesla GPU recognition
 - **NixOS Modules**: Complete service configurations for easy deployment
+- **Maxwell driver guardrail**: M40/M60 stay on NVIDIA's maintained 580 driver line
 
 ## Quick Start
 
@@ -18,25 +19,25 @@ Add to your `flake.nix`:
 
 ```nix
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
-  };
+inputs = {
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+};
 
-  outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      modules = [
-        tesla-inference.nixosModules.tesla-inference
-        {
-          tesla-inference = {
-            enable = true;
-            gpu = "P40"; # Automatically selects optimized ollama-cuda-tesla-p40
-            ollama.enable = true;
-          };
-        }
-      ];
-    };
-  };
+outputs = { nixpkgs, tesla-inference, ... }: {
+nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+modules = [
+tesla-inference.nixosModules.tesla-inference
+{
+tesla-inference = {
+enable = true;
+gpu = "P40"; # Automatically selects optimized ollama-cuda-tesla-p40
+ollama.enable = true;
+};
+}
+];
+};
+};
 }
 ```
 
@@ -76,20 +77,20 @@ Builds Ollama from source with specific CUDA architecture optimizations for your
 **Usage:**
 ```nix
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
-  };
+inputs = {
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+};
 
-  outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      modules = [
-        # Source build (default)
-        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
-        tesla-inference.nixosModules.tesla-inference
-      ];
-    };
-  };
+outputs = { nixpkgs, tesla-inference, ... }: {
+nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+modules = [
+# Source build (default)
+{ nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ]; }
+tesla-inference.nixosModules.tesla-inference
+];
+};
+};
 }
 ```
 
@@ -117,20 +118,20 @@ Downloads pre-built Ollama binaries from GitHub releases with bundled CUDA libra
 **Usage:**
 ```nix
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
-  };
+inputs = {
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+};
 
-  outputs = { nixpkgs, tesla-inference, ... }: {
-    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
-      modules = [
-        # Official binaries
-        { nixpkgs.overlays = [ tesla-inference.overlays.ollama-official-binaries ]; }
-        tesla-inference.nixosModules.tesla-inference
-      ];
-    };
-  };
+outputs = { nixpkgs, tesla-inference, ... }: {
+nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+modules = [
+# Official binaries
+{ nixpkgs.overlays = [ tesla-inference.overlays.ollama-official-binaries ]; }
+tesla-inference.nixosModules.tesla-inference
+];
+};
+};
 }
 ```
 
@@ -182,7 +183,7 @@ nix profile install github:deepwatrcreatur/tesla-inference-flake#llama-cpp-pytho
 
 # Enter a shell with Tesla P40-optimized tools
 nix shell github:deepwatrcreatur/tesla-inference-flake#ollama-cuda-tesla-p40 \
-         github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
+github:deepwatrcreatur/tesla-inference-flake#llama-cpp-tesla-p40
 
 # Install GPU monitoring tools
 nix profile install github:deepwatrcreatur/tesla-inference-flake#gpu-monitoring-tools
@@ -201,6 +202,16 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#tesla-p40
 nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 ```
 
+## Agent Work Queue
+
+If you are assigning or running agents against this repo, start with:
+
+- [`docs/work-items/START-HERE.md`](docs/work-items/START-HERE.md)
+
+The seed roadmap behind that queue is tracked in:
+
+- [`docs/improvements.md`](docs/improvements.md)
+
 ## Supported Tesla GPUs
 
 | GPU Series | Models | Compute Capability | Architecture |
@@ -208,6 +219,18 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 | K-series | K20, K40, K80 | 3.5, 3.7 | Kepler |
 | M-series | M40, M60 | 5.2 | Maxwell |
 | P-series | P40, P100 | 6.0, 6.1 | Pascal |
+
+## NVIDIA Driver Policy
+
+- `P40`/`P100` continue to follow the normal Nixpkgs `stable` NVIDIA driver path.
+- `M40`/`M60` are pinned to the maintained NVIDIA `580` branch.
+- If Nixpkgs later moves `stable`/`production` past `580` before exposing
+`nvidiaPackages.legacy_580`, the module now fails early for Maxwell instead of
+silently selecting an incompatible driver branch.
+
+This matters because NVIDIA has moved Maxwell support onto the maintained `580`
+line. The module now treats that as an explicit compatibility contract rather
+than relying on whatever `stable` happens to mean in a given Nixpkgs revision.
 
 ## Available Packages
 
@@ -240,18 +263,18 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 
 ```nix
 {
-  tesla-inference = {
-    enable = true;
-    gpu = "P40";
+tesla-inference = {
+enable = true;
+gpu = "P40";
 
-    ollama = {
-      enable = true;
-      modelsPath = "/models/ollama";
-      port = 11434;
-    };
+ollama = {
+enable = true;
+modelsPath = "/models/ollama";
+port = 11434;
+};
 
-    monitoring.enable = true;
-  };
+monitoring.enable = true;
+};
 }
 ```
 
@@ -259,19 +282,19 @@ nix flake init -t github:deepwatrcreatur/tesla-inference-flake#modern-gpu
 
 ```nix
 {
-  tesla-inference = {
-    enable = true;
+tesla-inference = {
+enable = true;
 
-    # Support multiple Tesla GPU generations
-    cudaArchitectures = [ "35" "61" ]; # K40 + P40
+# Support multiple Tesla GPU generations
+cudaArchitectures = [ "35" "61" ]; # K40 + P40
 
-    ollama = {
-      enable = true;
-      environmentVariables = {
-        CUDA_VISIBLE_DEVICES = "0,1";
-      };
-    };
-  };
+ollama = {
+enable = true;
+environmentVariables = {
+CUDA_VISIBLE_DEVICES = "0,1";
+};
+};
+};
 }
 ```
 
@@ -297,13 +320,13 @@ This flake is designed to integrate cleanly with existing NixOS configurations:
 ```nix
 # In your existing flake.nix
 {
-  inputs.tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
+inputs.tesla-inference.url = "github:deepwatrcreatur/tesla-inference-flake";
 
-  # Apply overlays to get Tesla-optimized packages
-  nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ];
+# Apply overlays to get Tesla-optimized packages
+nixpkgs.overlays = [ tesla-inference.overlays.ollama-cuda ];
 
-  # Or use the NixOS module for complete setup
-  imports = [ tesla-inference.nixosModules.tesla-inference ];
+# Or use the NixOS module for complete setup
+imports = [ tesla-inference.nixosModules.tesla-inference ];
 }
 ```
 

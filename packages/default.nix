@@ -2,13 +2,11 @@
 
 {
   # Tesla-optimized Ollama packages
+  ollama-official-binaries = pkgs.ollama-official-binaries;
   ollama-cuda-tesla = pkgs.ollama-cuda-tesla;
   ollama-cuda-tesla-p40 = pkgs.ollama-cuda-tesla-p40;
   ollama-cuda-tesla-pascal = pkgs.ollama-cuda-tesla-pascal;
   ollama-cuda-tesla-maxwell = pkgs.ollama-cuda-tesla-maxwell;
-
-  # Official Ollama binaries (CUDA-bundled)
-  ollama-official-binaries = pkgs.ollama-official-binaries;
 
   # Tesla-optimized llama.cpp packages
   llama-cpp-tesla = pkgs.llama-cpp-tesla;

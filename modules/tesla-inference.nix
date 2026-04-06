@@ -1,12 +1,31 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
+{ config
+, lib
+, pkgs
+, ...
 }:
 
 let
   cfg = config.tesla-inference;
+  isMaxwell = lib.elem cfg.gpu [ "M40" "M60" ];
+  nvidiaPackages = config.boot.kernelPackages.nvidiaPackages;
+  maxwellDriverPackage =
+    if nvidiaPackages ? legacy_580 then
+      nvidiaPackages.legacy_580
+    else if lib.hasPrefix "580." nvidiaPackages.production.version then
+    # Keep Maxwell on the 580 line until nixpkgs exposes an explicit legacy_580
+    # attribute. This prevents a silent jump to a newer branch that may drop
+    # Maxwell support.
+      nvidiaPackages.production
+    else
+      throw ''
+        tesla-inference: Maxwell GPUs (M40/M60) must stay on NVIDIA's 580 driver branch.
+        Current production driver version is ${nvidiaPackages.production.version}, and nixpkgs
+        does not expose nvidiaPackages.legacy_580 yet. Pin nixpkgs to a revision where
+        production is still 580.x or provide a 580-based driver package override.
+      '';
+  teslaLib = import ../lib { inherit lib; };
+  allowedCudaArchitectures = lib.flatten (lib.attrValues teslaLib.teslaArchitectures);
+  gpuArchitectures = teslaLib.getArchitectures cfg.gpu;
 in
 {
   options.tesla-inference = {
@@ -19,8 +38,12 @@ in
 
     cudaArchitectures = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
-      description = "Custom CUDA compute architectures (overrides gpu setting)";
+      default = [ ];
+      description = ''
+        Custom CUDA compute architectures for advanced setups (multi-GPU, legacy cards).
+        Used for validation and to inform Ollama's CUDA_* environment; leave empty to
+        derive architectures from the selected GPU.
+      '';
     };
 
     ollama = {
@@ -37,7 +60,7 @@ in
               "M60" = pkgs.ollama-cuda-tesla-maxwell;
             };
           in
-          packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
+            packageMap.${cfg.gpu} or pkgs.ollama-cuda-tesla;
         defaultText = lib.literalMD ''
           GPU-specific package selected based on `gpu`:
           - `P40` → `pkgs.ollama-cuda-tesla-p40`
@@ -85,7 +108,7 @@ in
 
       environmentVariables = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
-        default = {};
+        default = { };
         description = "Additional environment variables for Ollama";
       };
     };
@@ -151,6 +174,32 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = !(cfg.monitoring.enableSystemdService && !cfg.monitoring.enable);
+        message = "tesla-inference: monitoring.enableSystemdService = true has no effect when monitoring.enable = false";
+      }
+      {
+        assertion = lib.hasPrefix "/" cfg.ollama.modelsPath;
+        message = "tesla-inference: ollama.modelsPath must be an absolute path (got \"${cfg.ollama.modelsPath}\")";
+      }
+      {
+        assertion = lib.all (arch: lib.elem arch allowedCudaArchitectures) cfg.cudaArchitectures;
+        message = ''
+          tesla-inference: cudaArchitectures must be a list of known Tesla compute
+          capabilities (one of: ${lib.concatStringsSep ", " allowedCudaArchitectures}).
+        '';
+      }
+      {
+        assertion = cfg.cudaArchitectures == [ ] || lib.all (arch: lib.elem arch cfg.cudaArchitectures) gpuArchitectures;
+        message = ''
+          tesla-inference: cudaArchitectures does not include the compute capabilities
+          for GPU ${cfg.gpu}. Either clear tesla-inference.cudaArchitectures or include
+          ${lib.concatStringsSep ", " gpuArchitectures}.
+        '';
+      }
+    ];
+
     # Note: nixpkgs overlays should be applied by the flake that uses this module.
     # This module expects the tesla-inference overlays to already be available.
     # See the example templates for how to properly apply overlays.
@@ -165,7 +214,10 @@ in
       modesetting.enable = true;
       open = false; # Tesla GPUs need proprietary driver
       nvidiaSettings = true;
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      # Maxwell support lives on the maintained 580 branch. Keep M40/M60 off the
+      # generic stable path so a future nixpkgs bump does not silently move them
+      # to a branch that dropped Maxwell support.
+      package = if isMaxwell then maxwellDriverPackage else nvidiaPackages.stable;
     };
 
     # Configure Ollama service if enabled
@@ -174,14 +226,19 @@ in
       package = cfg.ollama.package;
       host = cfg.ollama.host;
       port = cfg.ollama.port;
-      environmentVariables = cfg.ollama.environmentVariables // {
-        OLLAMA_HOST = "${cfg.ollama.host}:${toString cfg.ollama.port}";
-        OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
-      };
+      environmentVariables =
+        cfg.ollama.environmentVariables
+        // ({
+          OLLAMA_HOST = "${cfg.ollama.host}:${toString cfg.ollama.port}";
+          OLLAMA_MODELS = "${cfg.ollama.modelsPath}/models";
+        } // lib.optionalAttrs (cfg.cudaArchitectures != [ ]) {
+          CUDA_ARCHITECTURES = teslaLib.buildArchString cfg.cudaArchitectures;
+          GGML_CUDA_ARCHITECTURES = teslaLib.buildArchString cfg.cudaArchitectures;
+        });
     };
 
-    # Open firewall port if needed (check both IPv4 and IPv6 loopback)
-    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && cfg.ollama.host != "127.0.0.1" && cfg.ollama.host != "::1") [ cfg.ollama.port ];
+    # Open firewall port if needed (check IPv4, IPv6, and hostname loopback forms)
+    networking.firewall.allowedTCPPorts = lib.mkIf (cfg.ollama.enable && !(lib.elem cfg.ollama.host [ "127.0.0.1" "::1" "localhost" ])) [ cfg.ollama.port ];
 
     # Model storage configuration
     systemd.services.ollama = lib.mkIf cfg.ollama.enable {
@@ -255,7 +312,7 @@ in
     };
 
     # Ensure video group exists for GPU access
-    users.groups.video = {};
+    users.groups.video = { };
 
     # Allow unfree packages (NVIDIA drivers, CUDA)
     nixpkgs.config.allowUnfree = true;
