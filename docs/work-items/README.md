@@ -15,9 +15,9 @@ Highest value first:
 3. `03-localhost-firewall-hardening.md`
 4. `04-safer-template-firewall-defaults.md`
 5. `05-enum-eval-coverage.md`
-6. `06-option-validation-assertions.md`
-7. `07-vllm-package-scope-evaluation.md`
-8. `08-p40-retirement-threshold.md`
+6. `06-option-validation-assertions.md` - done
+7. `07-vllm-package-scope-evaluation.md` - done
+8. `08-p40-retirement-threshold.md` - done
 
 ## Status Model
 

@@ -1,8 +1,14 @@
 # 07 Vllm Package Scope Evaluation
 
-Status: `ready`
+Status: `done`
 Suggested branch: `research/vllm-package-scope`
-Priority: `medium`
+
+## Findings (April 2026)
+
+1. **Hardware Floor:** Official vLLM requires CUDA Compute Capability 7.0+ (Volta). All GPUs in this flake's primary scope (K/M/P series) are below this floor (P40 is 6.1).
+2. **Performance Constraints:** Tesla P40 has extremely poor native FP16 performance. Standard vLLM execution in FP16 is 10x+ slower than llama.cpp on the same hardware.
+3. **Community Patches:** While forks like `sasha0552/pascal-pkgs-ci` exist, they require significant patching of PyTorch and Triton, which is out-of-scope for this flake to maintain.
+4. **Conclusion:** **Built-in vLLM support is REJECTED for the Tesla baseline.** `llama-cpp-python` remains the superior and recommended path for GGUF-based inference on these legacy cards.
 
 ## Goal
 

@@ -1,8 +1,23 @@
 # 08 P40 Retirement Threshold
 
-Status: `ready`
+Status: `done`
 Suggested branch: `docs/p40-retirement-threshold`
-Priority: `medium`
+
+## Strategic Posture (April 2026)
+
+The Tesla P40 remains a **strategic target** for the "Thorncliffe" Cluster. With 72GB of aggregate VRAM across 3 nodes, it currently provides a unique "VRAM-to-Dollar" ratio that is not yet matched by entry-level consumer hardware.
+
+## Retirement Triggers
+
+Retirement or demotion to "Legacy/Sunset" status will be triggered by:
+
+1. **Software Abandonment:** If `llama.cpp` and `vllm-pascal` both stop supporting Pascal/CC 6.1, the engineering overhead to carry custom patches exceeds the hardware's value.
+2. **Efficiency Parity:** When a modern GPU with 24GB+ VRAM (e.g., RTX 5060/Titan-successor) achieves 3x the P40's tokens-per-second at <50% of the power consumption, the "tokens-per-watt" becomes the primary driver for retirement.
+3. **Model Misalignment:** If the "Deep Thinker" models (e.g., Llama-4 70B+) require architectural features (like FP8 or specific tensor cores) that Pascal cannot emulate with reasonable performance (~1 tok/sec floor).
+
+## Recommendation
+
+Keep Tesla/P40 as a **Core Path** for the 2026-2027 cycle. Continue investing in optimization for the 3x P40 "Thorncliffe" cluster.
 
 ## Goal
 
