@@ -167,7 +167,7 @@ in
 
       kernelParams = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ "nvidia.NVRM=0" ];
+        default = [ ];
         description = "List of kernel parameters to apply when optimizations.enableKernelParams is true.";
       };
     };
